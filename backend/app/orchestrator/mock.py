@@ -97,7 +97,7 @@ class MockProvider:
         return any(t in q for t in OUT_OF_SCOPE)
 
     def _is_trajectory(self, q: str) -> bool:
-        return any(t in q for t in ["trajectory", "path", "track", "route"])
+        return any(t in q for t in ["trajectory", "path", "track", "route", "travel", "moved", "where did"])
 
     def _is_comparison(self, q: str) -> bool:
         return any(
@@ -296,6 +296,9 @@ ORDER BY month"""
         month_like = ""
         if label and "-" in label:
             month_like = label.split("-")[1]
+        month_filter = ""
+        if month_like:
+            month_filter = f" AND year_month LIKE '__-{month_like}'"
         sql = f"""
 SELECT AVG(m.temperature_c) AS target_avg
 FROM argo_measurements m
@@ -305,7 +308,7 @@ WHERE {self._where(region, False, period_filter)}
 
 SELECT AVG(avg_temp_c) AS baseline_avg
 FROM regional_monthly_avg
-WHERE region = '{region}'{' AND year_month LIKE '__-' + month_like if month_like else ''};"""
+WHERE region = '{region}'{month_filter};"""
         return GeneratedSQL(
             sql=sql,
             intent_type="comparison",

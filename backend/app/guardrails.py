@@ -62,6 +62,9 @@ BLOCKED_PATTERNS = re.compile(
 TABLE_RE = re.compile(r"\b(?:FROM|JOIN)\s+([a-z_]\w*)", re.IGNORECASE)
 IDENT_RE = re.compile(r"(?:^|\s)([a-z_]\w*)(?=\s*[,)])", re.IGNORECASE)
 QUALIFIED_RE = re.compile(r"\b[a-z_]\w*\.([a-z_]\w*)", re.IGNORECASE)
+# Bare identifier directly before FROM (e.g. the last SELECT-list column), which the
+# comma/paren lookahead above misses: `SELECT secret FROM argo_floats`.
+BEFORE_FROM_RE = re.compile(r"([a-z_]\w*)\s+FROM\b", re.IGNORECASE)
 
 
 class GuardrailViolation(Exception):
@@ -92,6 +95,13 @@ def _validate_columns(stmt: str) -> None:
             and lowered not in ALLOWED_FUNCTIONS
         ):
             raise GuardrailViolation(f"Unknown identifier '{ident}'.")
+    for before_from in BEFORE_FROM_RE.findall(stmt):
+        lowered = before_from.lower()
+        if (
+            lowered not in ALLOWED_COLUMNS
+            and lowered not in ALLOWED_FUNCTIONS
+        ):
+            raise GuardrailViolation(f"Unknown identifier '{before_from}'.")
 
 
 def _apply_row_cap(stmt: str) -> str:

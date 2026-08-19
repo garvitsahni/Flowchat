@@ -1,4 +1,8 @@
-"""FloatChat backend — FastAPI app. Endpoints: /query, /health."""
+"""FloatChat backend — FastAPI app. Endpoints: /query, /health.
+
+Run on Windows with `--loop app.loops:selector_loop_factory` (psycopg async
+needs a SelectorEventLoop; uvicorn's default Proactor loop breaks it).
+"""
 
 from __future__ import annotations
 

@@ -2,30 +2,28 @@
 
 import psycopg
 from psycopg.rows import dict_row
+from psycopg_pool import AsyncConnectionPool
 
 from .config import settings
 
 _pool = None
 
 
-def get_pool() -> psycopg.AsyncConnectionPool:
+def get_pool() -> AsyncConnectionPool:
     global _pool
     if _pool is None:
-        _pool = psycopg.AsyncConnectionPool(
+        _pool = AsyncConnectionPool(
             settings.db_url,
             min_size=1,
             max_size=5,
-            open=False,
             kwargs={"row_factory": dict_row},
         )
-    if not _pool.is_open():
-        _pool.open(wait=True, timeout=10)
     return _pool
 
 
 async def close_pool() -> None:
     global _pool
-    if _pool is not None and _pool.is_open():
+    if _pool is not None and not _pool.closed:
         await _pool.close()
         _pool = None
 
@@ -41,7 +39,11 @@ async def fetch_all(query: str, params: tuple | None = None) -> list[dict]:
 
 async def ping() -> bool:
     try:
-        await fetch_all("SELECT 1")
+        pool = get_pool()
+        async with pool.connection() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute("SELECT 1")
+                await cur.fetchone()
         return True
     except Exception:
         return False
