@@ -116,6 +116,7 @@
   "chart_data": { "...": "..." },
   "confidence": "high | low",
   "confidence_note": "Based on 14 floats reporting in this period.",
+  "refusal_reason": "",
   "explainability": {
     "sql": "SELECT ...",
     "floats_used": ["2902123", "2902456"],
@@ -124,6 +125,12 @@
   }
 }
 ```
+
+`refusal_reason` is **additive** (optional, default `""`): when `chart_type` is `"none"`
+the backend sets it to one of `out_of_scope` (question can't be answered from this schema),
+`no_data` (region/dates outside the ingested Indian-Ocean subset), or `unsafe` (guardrail
+blocked the intent). The frontend must render the corresponding empty state instead of a
+blank panel — no code path should silently return an unattributed number.
 
 This contract is the single most important artifact for parallel dev — lock it Day 1 so
 frontend can build against mock JSON while backend/AI catch up.
