@@ -11,19 +11,23 @@ the DESIGN.md accent tokens (bio teal, scan amber, flag red, current blue, foam 
 
 ## Palette shift (tokens only, in `tailwind.config.js` + `index.css`)
 
-Move the `abyss` surfaces from dark-navy to near-black; keep all accent/neutral tokens:
+Move the `abyss` surfaces from dark-navy to **Claude's warm dark charcoal** with a
+**terracotta** accent (`#D97757`) and cream text (`#ECECEC`). Accent/warning/error
+tokens (`bio`, `scan`, `flag`) keep their roles but `bio` (the primary accent) is now
+terracotta. All token *names* and component logic are unchanged — values only.
 
-| Token | Before | After |
-|-------|--------|-------|
-| `abyss-950` (page bg) | `#05141F` | `#050507` |
-| `abyss-900` (panel)   | `#0A1F2E` | `#0B0B0E` |
-| `abyss-800` (raised)  | `#122C3D` | `#141418` |
-| `current-500/300`     | unchanged | unchanged (blue accent) |
-| `bio-400/300`         | unchanged | unchanged (teal accent) |
-| `scan-500`, `flag-500`, `foam-*` | unchanged | unchanged |
+| Token | Before (ocean) | After (Claude) |
+|-------|--------|--------|
+| `abyss-950` (page bg) | `#05141F` | `#1F1E1D` |
+| `abyss-900` (panel)   | `#0A1F2E` | `#262624` |
+| `abyss-800` (raised)  | `#122C3D` | `#30302E` |
+| `current-500`/`300`   | `#1B4F72`/`#3A7CA5` | `#3F3D3B`/`#8C8A86` |
+| `bio-400`/`300`       | `#2DE1C2`/`#6BF0D9` | `#D97757`/`#E68A6E` |
+| `scan-500`, `flag-500`, `foam-*` | unchanged roles | kept (amber warning, red error, cream text) |
 
-Mirror the new panel color in Plotly (`paper_bgcolor`/`plot_bgcolor` in `VizPanel.tsx`
-currently hardcode `#0A1F2E`) so charts blend with the black panels.
+Mirror the new panel color in Plotly (`paper_bgcolor`/`plot_bgcolor` in `VizPanel.tsx`)
+and the series colors (`TEAL`→terracotta, `MUTED`→warm gray) so charts blend with the
+Claude panels. Same for the Leaflet map line/markers in `TrajectoryMap.tsx`.
 
 ## Component changes
 

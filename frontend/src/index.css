@@ -3,18 +3,18 @@
 @tailwind utilities;
 
 :root {
-  --abyss-950: #050507;
-  --abyss-900: #0b0b0e;
-  --abyss-800: #141418;
-  --current-500: #1b4f72;
-  --current-300: #3a7ca5;
-  --bioluminescent-400: #2de1c2;
-  --bioluminescent-300: #6bf0d9;
+  --abyss-950: #1f1e1d;
+  --abyss-900: #262624;
+  --abyss-800: #30302e;
+  --current-500: #3f3d3b;
+  --current-300: #8c8a86;
+  --bioluminescent-400: #d97757;
+  --bioluminescent-300: #e68a6e;
   --surface-scan-500: #f4a259;
   --flag-critical-500: #e8544e;
-  --foam-50: #eaf6f6;
-  --foam-200: #c4d8da;
-  --sonar-grid: rgba(45, 225, 194, 0.08);
+  --foam-50: #ececec;
+  --foam-200: #b5b3ae;
+  --sonar-grid: rgba(217, 119, 87, 0.08);
 }
 
 html,

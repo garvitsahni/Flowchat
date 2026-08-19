@@ -2,8 +2,8 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-const TEAL = "#2DE1C2";
-const MUTED = "#3A7CA5";
+const TEAL = "#D97757";
+const MUTED = "#8C8A86";
 
 export function TrajectoryMap({
   latitudes,

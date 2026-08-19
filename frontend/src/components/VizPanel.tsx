@@ -136,16 +136,16 @@ interface Build {
   config: Partial<Record<string, unknown>>;
 }
 
-const SONAR_GRID = "rgba(45, 225, 194, 0.08)";
-const TEAL = "#2DE1C2";
-const MUTED = "#3A7CA5";
-const FOAM = "#EAF6F6";
+const SONAR_GRID = "rgba(217, 119, 87, 0.08)";
+const TEAL = "#D97757";
+const MUTED = "#8C8A86";
+const FOAM = "#ECECEC";
 
 function buildPlot(type: string, data: Record<string, unknown>): Build {
   const config = { displayModeBar: false, responsive: true };
   const layoutBase = {
-    paper_bgcolor: "#0B0B0E",
-    plot_bgcolor: "#0B0B0E",
+    paper_bgcolor: "#262624",
+    plot_bgcolor: "#262624",
     font: { color: FOAM, family: "IBM Plex Mono, monospace", size: 12 },
     margin: { l: 52, r: 24, t: 40, b: 44 },
     xaxis: { gridcolor: SONAR_GRID, zerolinecolor: SONAR_GRID },
