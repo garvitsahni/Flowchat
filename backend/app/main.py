@@ -115,10 +115,20 @@ async def query(req: QueryRequest) -> QueryResponse:
     try:
         statements = guardrails.validate_sql(generated.sql)
     except GuardrailViolation as exc:
-        logger.warning("Guardrail rejection: %s", exc.reason)
-        return _graceful_refusal(
-            "I couldn't safely answer that question.", req.language, reason="unsafe"
-        )
+        logger.warning("Guardrail rejection: %s — falling back to mock provider.", exc.reason)
+        from .orchestrator.mock import MockProvider
+
+        mock = MockProvider()
+        generated = mock.generate_sql(req.question, req.language)
+        if generated.sql is None:
+            return _graceful_refusal(generated.explanation, req.language)
+        try:
+            statements = guardrails.validate_sql(generated.sql)
+        except GuardrailViolation as exc2:
+            logger.warning("Mock SQL also rejected: %s", exc2.reason)
+            return _graceful_refusal(
+                "I couldn't safely answer that question.", req.language, reason="unsafe"
+            )
 
     rows_by_statement: list[list[dict]] | None = None
     try:
@@ -150,7 +160,9 @@ async def query(req: QueryRequest) -> QueryResponse:
         period=generated.requested_period,
     )
 
-    if not result.rows or all(not r for r in rows_by_statement):
+    if not result.rows or all(
+        all(v is None or v == "" for v in r.values()) for r in result.rows
+    ):
         return _graceful_refusal(
             "No data available for this region and time period.",
             req.language,
