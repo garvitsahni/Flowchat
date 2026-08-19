@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --abyss-950: #05141f;
+  --abyss-900: #0a1f2e;
+  --abyss-800: #122c3d;
+  --current-500: #1b4f72;
+  --current-300: #3a7ca5;
+  --bioluminescent-400: #2de1c2;
+  --bioluminescent-300: #6bf0d9;
+  --surface-scan-500: #f4a259;
+  --flag-critical-500: #e8544e;
+  --foam-50: #eaf6f6;
+  --foam-200: #c4d8da;
+  --sonar-grid: rgba(45, 225, 194, 0.08);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--abyss-950);
+  color: var(--foam-50);
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.lang-hi {
+  font-family: "Noto Sans Devanagari", "Inter", sans-serif;
+}
+
+/* Sonar sweep — slow calm pulse instead of a spinner (DESIGN.md §2.4) */
+@keyframes sonar-sweep {
+  0% {
+    background-position: -120px 0;
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    background-position: 160px 0;
+    opacity: 0.4;
+  }
+}
+
+.sonar-sweep {
+  background-image: linear-gradient(
+    100deg,
+    transparent 20%,
+    var(--bioluminescent-400) 50%,
+    transparent 80%
+  );
+  background-repeat: no-repeat;
+  animation: sonar-sweep 1.6s ease-in-out infinite;
+}
+
+@keyframes sonar-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 162, 89, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(244, 162, 89, 0);
+  }
+}
+
+.sonar-pulse {
+  animation: sonar-pulse 2s ease-out infinite;
+}
+
+/* Leaflet tooltip on dark */
+.float-map-tip {
+  background: var(--abyss-800) !important;
+  border: 1px solid var(--current-500) !important;
+  color: var(--foam-50) !important;
+  font-family: "IBM Plex Mono", monospace !important;
+  font-size: 11px !important;
+  border-radius: 4px !important;
+}
+
+/* Scrollbars in dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--current-500);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
