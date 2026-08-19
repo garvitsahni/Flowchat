@@ -176,7 +176,7 @@ export function ChatPanel({
 
       <div className="border-t border-current-500/30 pt-3">
         <form onSubmit={onSubmit}>
-          <div className="cursor-text rounded-2xl border border-current-500/50 bg-abyss-800 shadow-[0_0_15px_rgba(0,0,0,0.4)] transition-shadow focus-within:border-bio-400/70 focus-within:shadow-[0_0_0_1px_rgba(45,225,194,0.4),0_0_20px_rgba(45,225,194,0.15)]">
+          <div className="cursor-text rounded-2xl border border-current-500/50 bg-abyss-800 shadow-[0_0_15px_rgba(0,0,0,0.4)] transition-shadow focus-within:border-bio-400/70 focus-within:shadow-[0_0_0_1px_rgba(217,119,87,0.4),0_0_20px_rgba(217,119,87,0.15)]">
             <textarea
               ref={textareaRef}
               value={input}
@@ -203,7 +203,7 @@ export function ChatPanel({
                 className={cn(
                   "flex h-8 w-8 items-center justify-center rounded-full transition-all duration-150",
                   input.trim() && !busy
-                    ? "bg-bio-400 text-abyss-950 shadow-[0_0_12px_rgba(45,225,194,0.4)] hover:bg-bio-300"
+                    ? "bg-bio-400 text-abyss-950 shadow-[0_0_12px_rgba(217,119,87,0.4)] hover:bg-bio-300"
                     : "bg-abyss-900 text-foam-200/40"
                 )}
               >
