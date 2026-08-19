@@ -23,8 +23,7 @@ data/netcdf/
 Thumbs.db
 .idea/
 .vscode/
-frontend/dev.log
-frontend/dev-err.log
+frontend/dev*.log
 frontend/dist/
 backend/uvicorn-err.log
 backend/uvicorn-out.log
