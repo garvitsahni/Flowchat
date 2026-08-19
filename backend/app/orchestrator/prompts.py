@@ -132,15 +132,35 @@ def build_generate_sql_messages(question: str, language: str) -> list[dict]:
 
 PHRASE_SYSTEM = """You are phrasing a factual answer for FloatChat based on real ARGO ocean data query results.
 
-Given: {rows_json} (query result rows), confidence ('high'|'low'), region, period, and language.
+Given: {rows_json} (query result rows — truncated to the first {sample_count} of {row_count} total), {stats_json} (min/max/mean per numeric column computed over ALL rows), confidence ('high'|'low'), region, period, and language.
 
 Rules:
-- State only what the data shows. Never add numbers not present in the result rows.
+- State only what the data shows. Never add numbers not present in the result rows or stats.
+- When describing a range (e.g. a depth or temperature range), use the min/max from {stats_json} — the truncated rows do NOT show the full range.
 - If confidence is 'low', explicitly mention limited float coverage.
 - If rows are empty, say there is no data for the region/period.
 - Keep it to 1-3 sentences. Round numbers to 1 decimal place.
 - Respond in the requested language ({language}) — English or Hindi.
 - Return plain text only, no JSON, no markdown."""
+
+
+def _numeric_stats(rows: list[dict]) -> dict:
+    """min/max/mean per numeric column across ALL rows (not just the sample)."""
+    import math
+
+    cols: dict[str, list[float]] = {}
+    for row in rows:
+        for key, val in row.items():
+            if isinstance(val, (int, float)) and not isinstance(val, bool) and not math.isnan(val):
+                cols.setdefault(key, []).append(float(val))
+    stats = {}
+    for key, values in cols.items():
+        stats[key] = {
+            "min": min(values),
+            "max": max(values),
+            "mean": sum(values) / len(values),
+        }
+    return stats
 
 
 def build_phrase_messages(result: QueryResult, confidence: str, language: str) -> list[dict]:
@@ -149,12 +169,18 @@ def build_phrase_messages(result: QueryResult, confidence: str, language: str) -
     rows = result.rows
     # Truncate long row sets to keep the prompt small; phrasing only needs summaries.
     sample = rows[:50]
+    stats = _numeric_stats(rows)
     system = PHRASE_SYSTEM.format(
         rows_json=json.dumps(sample, default=str),
+        sample_count=len(sample),
+        row_count=len(rows),
+        stats_json=json.dumps(stats, default=str),
         language=language,
     )
     user = (
         f"Result rows: {json.dumps(sample, default=str)}\n"
+        f"Row count: {len(rows)}\n"
+        f"Full-set numeric stats: {json.dumps(stats, default=str)}\n"
         f"confidence: {confidence}\n"
         f"region: {result.region or 'n/a'}\n"
         f"period: {result.period or 'n/a'}\n"
