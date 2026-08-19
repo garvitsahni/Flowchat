@@ -401,8 +401,8 @@ def provider_factory(name: str | None = None) -> LLMProvider:
         from .nvidia import NvidiaProvider
 
         return NvidiaProvider()
-    if chosen == "grok" and settings.grok_api_key:
-        from .grok import GrokProvider
+    if chosen == "groq" and settings.groq_api_key:
+        from .groq import GroqProvider
 
-        return GrokProvider()
+        return GroqProvider()
     return MockProvider()

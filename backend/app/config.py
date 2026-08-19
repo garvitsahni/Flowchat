@@ -27,17 +27,17 @@ class Settings(BaseSettings):
     pipeline_db_password: str = "floatchat_dev"
 
     # LLM providers — activate only when their key is present
-    llm_provider: str = "mock"  # mock | gemini | openrouter | nvidia | grok
+    llm_provider: str = "mock"  # mock | gemini | openrouter | nvidia | groq
     gemini_api_key: str | None = None
     openrouter_api_key: str | None = None
     nvidia_api_key: str | None = None
-    grok_api_key: str | None = None
+    groq_api_key: str | None = None
 
     # Model names per provider (overridable via env)
     gemini_model: str = "gemini-3.6-flash"
     openrouter_model: str = "openrouter/free"  # routes to least-busy free model
     nvidia_model: str = "meta/llama-3.1-8b-instruct"
-    grok_model: str = "grok-x"
+    groq_model: str = "openai/gpt-oss-120b"
 
     # Guardrail caps (ARCHITECTURE.md §2.4)
     max_rows: int = 5000

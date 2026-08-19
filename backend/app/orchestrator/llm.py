@@ -2,7 +2,7 @@
 
 Implements the common two-call flow (generate_sql → phrase_answer) from
 prompts.py on top of a per-provider `_complete(messages) -> str` hook. Each concrete
-provider (gemini / openrouter / grok) only supplies the wire call.
+provider (gemini / openrouter / groq) only supplies the wire call.
 
 Parsing is defensive: models sometimes wrap JSON in ``` fences or add preamble.
 """
