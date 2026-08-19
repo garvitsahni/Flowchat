@@ -1,0 +1,11 @@
+# Netlify — FloatChat frontend
+[build]
+  command = "npm run build"
+  publish = "dist"
+  base = "frontend"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Backend API base URL. Set the actual deployed URL in the Netlify dashboard
+# (Site settings → Environment variables): VITE_API_BASE=https://floatchat-backend.onrender.com

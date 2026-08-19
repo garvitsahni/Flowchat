@@ -1,0 +1,26 @@
+# Render blueprints — backend + DB for FloatChat demo
+# DB host: Supabase Postgres (PostGIS) — set DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD
+# from your Supabase connection pooler string in the Render dashboard.
+# Read-only role note: Supabase pooler users (postgres.<ref>, etc.) are SELECT-only
+# by policy; the app's DB_USER should be a pooler user with SELECT privileges only.
+services:
+  - type: web
+    name: floatchat-backend
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: LLM_PROVIDER
+        value: nvidia
+      - key: NVIDIA_API_KEY
+        sync: false
