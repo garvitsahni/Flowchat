@@ -21,7 +21,7 @@ _API_URL = "https://api.x.ai/v1/chat/completions"
 class GrokProvider(LLMChatProvider):
     name = "grok"
 
-    def _complete(self, messages: list[dict]) -> str:
+    def _complete(self, messages: list[dict], *, json_mode: bool = False) -> str:
         if not settings.grok_api_key:
             raise NotImplementedError("GROK_API_KEY is not set.")
 
@@ -32,7 +32,7 @@ class GrokProvider(LLMChatProvider):
                 "Content-Type": "application/json",
             },
             json={
-                "model": "grok-x",
+                "model": settings.grok_model,
                 "messages": messages,
                 "temperature": 0.2,
                 "max_tokens": 2048,

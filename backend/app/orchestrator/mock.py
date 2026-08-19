@@ -397,6 +397,10 @@ def provider_factory(name: str | None = None) -> LLMProvider:
         from .openrouter import OpenRouterProvider
 
         return OpenRouterProvider()
+    if chosen == "nvidia" and settings.nvidia_api_key:
+        from .nvidia import NvidiaProvider
+
+        return NvidiaProvider()
     if chosen == "grok" and settings.grok_api_key:
         from .grok import GrokProvider
 

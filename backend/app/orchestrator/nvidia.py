@@ -1,7 +1,7 @@
-"""OpenRouter provider — real implementation.
+"""NVIDIA NIM provider — real implementation.
 
-Activates when LLM_PROVIDER=openrouter AND OPENROUTER_API_KEY is set. Uses the
-OpenAI-compatible /chat/completions endpoint over httpx.
+Activates when LLM_PROVIDER=nvidia AND NVIDIA_API_KEY is set. Uses the NVIDIA hosted
+NIM OpenAI-compatible /chat/completions endpoint over httpx.
 """
 
 from __future__ import annotations
@@ -15,34 +15,34 @@ from .llm import LLMChatProvider
 
 logger = logging.getLogger("floatchat")
 
-_API_URL = "https://openrouter.ai/api/v1/chat/completions"
+_API_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 
 
-class OpenRouterProvider(LLMChatProvider):
-    name = "openrouter"
+class NvidiaProvider(LLMChatProvider):
+    name = "nvidia"
 
     def _complete(self, messages: list[dict], *, json_mode: bool = False) -> str:
-        if not settings.openrouter_api_key:
-            raise NotImplementedError("OPENROUTER_API_KEY is not set.")
+        if not settings.nvidia_api_key:
+            raise NotImplementedError("NVIDIA_API_KEY is not set.")
 
         resp = httpx.post(
             _API_URL,
             headers={
-                "Authorization": f"Bearer {settings.openrouter_api_key}",
+                "Authorization": f"Bearer {settings.nvidia_api_key}",
                 "Content-Type": "application/json",
             },
             json={
-                "model": settings.openrouter_model,
+                "model": settings.nvidia_model,
                 "messages": messages,
                 "temperature": 0.2,
                 "max_tokens": 2048,
             },
-            timeout=60.0,
+            timeout=180.0,
         )
         resp.raise_for_status()
         data = resp.json()
         try:
             return data["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError):
-            logger.warning("OpenRouter reply missing choices: %s", data)
+            logger.warning("NVIDIA NIM reply missing choices: %s", data)
             return ""

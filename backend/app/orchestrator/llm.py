@@ -60,15 +60,19 @@ class LLMChatProvider(Protocol):
 
     name: str
 
-    def _complete(self, messages: list[dict]) -> str:
-        """One chat completion round-trip; returns the assistant text."""
+    def _complete(self, messages: list[dict], *, json_mode: bool = False) -> str:
+        """One chat completion round-trip; returns the assistant text.
+
+        json_mode=True asks the model for strict JSON output (used for SQL generation);
+        False requests plain text (used for answer phrasing).
+        """
         ...
 
     # ------------------------------------------------------------ shared flow
 
     def generate_sql(self, question: str, language: str = "en") -> GeneratedSQL:
         messages = prompts.build_generate_sql_messages(question, language)
-        raw = self._complete(messages)
+        raw = self._complete(messages, json_mode=True)
         obj = extract_json_object(raw)
         if obj is None:
             logger.warning("%s: no JSON in generate_sql reply, treating as unsupported.", self.name)

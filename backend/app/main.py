@@ -79,7 +79,16 @@ async def query(req: QueryRequest) -> QueryResponse:
         logger.warning("Provider %s not implemented; using mock.", provider.name)
         from .orchestrator.mock import MockProvider
 
-        generated = MockProvider().generate_sql(req.question, req.language)
+        provider = MockProvider()
+        generated = provider.generate_sql(req.question, req.language)
+    except Exception:
+        # Transient provider API failure — degrade to the deterministic mock rather
+        # than surfacing a 500. Mock still generates real SQL against the real schema.
+        logger.exception("Provider %s failed during SQL generation; using mock.", provider.name)
+        from .orchestrator.mock import MockProvider
+
+        provider = MockProvider()
+        generated = provider.generate_sql(req.question, req.language)
 
     if generated.sql is None:
         return _graceful_refusal(generated.explanation, req.language)
@@ -107,7 +116,11 @@ async def query(req: QueryRequest) -> QueryResponse:
     confidence = await assess(result.region or generated.requested_region, year_month)
     result.qc_excluded_count = confidence.qc_excluded_count
 
-    answer_text = provider.phrase_answer(result, confidence.confidence, req.language)
+    try:
+        answer_text = provider.phrase_answer(result, confidence.confidence, req.language)
+    except Exception:
+        logger.exception("Provider %s failed during phrasing; using fallback.", provider.name)
+        answer_text = ""
     if not answer_text:
         answer_text = answers.fallback_answer(result, confidence.confidence)
 

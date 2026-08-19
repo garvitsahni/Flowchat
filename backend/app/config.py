@@ -1,10 +1,18 @@
-"""FloatChat settings — read from environment / .env."""
+"""FloatChat settings — read from environment / backend/.env."""
+
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+_BACKEND_DIR = Path(__file__).resolve().parent.parent
+
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=_BACKEND_DIR / ".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     # DB — app executes via the read-only role (ARCHITECTURE.md §2.4)
     # Port 55432: local Postgres 16/18 services already own 5432 and 5433.
@@ -19,10 +27,17 @@ class Settings(BaseSettings):
     pipeline_db_password: str = "floatchat_dev"
 
     # LLM providers — activate only when their key is present
-    llm_provider: str = "mock"  # mock | gemini | openrouter | grok
+    llm_provider: str = "mock"  # mock | gemini | openrouter | nvidia | grok
     gemini_api_key: str | None = None
     openrouter_api_key: str | None = None
+    nvidia_api_key: str | None = None
     grok_api_key: str | None = None
+
+    # Model names per provider (overridable via env)
+    gemini_model: str = "gemini-3.6-flash"
+    openrouter_model: str = "openrouter/free"  # routes to least-busy free model
+    nvidia_model: str = "meta/llama-3.1-8b-instruct"
+    grok_model: str = "grok-x"
 
     # Guardrail caps (ARCHITECTURE.md §2.4)
     max_rows: int = 5000

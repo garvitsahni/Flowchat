@@ -26,4 +26,6 @@ Thumbs.db
 frontend/dev.log
 frontend/dev-err.log
 frontend/dist/
+backend/uvicorn-err.log
+backend/uvicorn-out.log
 
