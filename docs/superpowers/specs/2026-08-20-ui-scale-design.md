@@ -34,7 +34,8 @@ and many mono metadata labels at 10–11px. It reads cramped rather than polishe
 | User/assistant messages + composer input | `text-[14px]` | `text-[15px]` |
 | Suggestion chips + error messages | `text-[13px]` | `text-[14px]` |
 | Empty-state heading (`Ask about...`) | `text-sm` 14px | `text-[15px]` |
-| All meta/labels: header LIVE + dataset meta, message meta, language toggle, confidence badge, viz captions, trajectory-map overlay, explainability drawer | `text-[10px]` / `text-[11px]` / `text-xs` | `text-xs` 12px (and `text-[13px]` where previously `text-xs` 12px) |
+| Meta/labels currently 10–11px: header LIVE + dataset meta, message meta, language toggle, confidence badge, viz section titles, explainability drawer | `text-[10px]` / `text-[11px]` | `text-xs` 12px |
+| Detail text currently `text-xs` 12px: viz empty-state detail, trajectory-map overlay | `text-xs` 12px | `text-[13px]` |
 
 ## Spacing changes
 
