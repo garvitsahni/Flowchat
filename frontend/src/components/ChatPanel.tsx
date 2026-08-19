@@ -132,7 +132,10 @@ export function ChatPanel({
                   </div>
                 )}
                 {msg.response && msg.kind !== "refusal" && (
-                  <ExplainabilityDrawer info={msg.response.explainability} />
+                  <ExplainabilityDrawer
+                    info={msg.response.explainability}
+                    confidence={msg.response.confidence}
+                  />
                 )}
               </div>
             )}
