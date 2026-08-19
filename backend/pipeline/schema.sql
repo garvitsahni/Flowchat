@@ -66,7 +66,8 @@ CREATE TABLE IF NOT EXISTS regional_monthly_avg (
 );
 
 -- Defense-in-depth: read-only role for ALL application queries (ARCHITECTURE.md §2.4)
-CREATE ROLE floatchat_readonly NOLOGIN;
+-- LOGIN so the FastAPI app can connect as this role directly (SELECT-only, no writes).
+CREATE ROLE floatchat_readonly LOGIN PASSWORD 'floatchat_dev';
 GRANT CONNECT ON DATABASE floatchat TO floatchat_readonly;
 GRANT USAGE ON SCHEMA public TO floatchat_readonly;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO floatchat_readonly;

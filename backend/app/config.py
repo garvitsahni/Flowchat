@@ -7,8 +7,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # DB — app executes via the read-only role (ARCHITECTURE.md §2.4)
+    # Port 55432: local Postgres 16/18 services already own 5432 and 5433.
     db_host: str = "localhost"
-    db_port: int = 5432
+    db_port: int = 55432
     db_name: str = "floatchat"
     db_user: str = "floatchat_readonly"
     db_password: str = "floatchat_dev"
