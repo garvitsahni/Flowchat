@@ -29,9 +29,19 @@ export function VizPanel({ response }: { response: QueryResponse | null }) {
 
   if (!response) {
     return (
-      <div className="flex h-full min-h-64 items-center justify-center rounded-lg border border-dashed border-current-500/40">
+      <div className="flex h-full min-h-64 flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-current-500/40 bg-abyss-900 px-6 text-center">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-bio-400/25 bg-abyss-800/80">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <circle cx="12" cy="12" r="2" className="text-bio-400" />
+            <circle cx="12" cy="12" r="7" className="text-bio-400/50" />
+            <circle cx="12" cy="12" r="11" className="text-bio-400/25" />
+          </svg>
+        </div>
         <p className="font-mono text-xs text-current-300">
           query the floats to render a visualization
+        </p>
+        <p className="max-w-xs font-mono text-[11px] leading-relaxed text-foam-200/50">
+          live dataset: float 2900226 · Bay of Bengal · Oct 2002 – Aug 2004 · 125 profiles
         </p>
       </div>
     );
@@ -134,8 +144,8 @@ const FOAM = "#EAF6F6";
 function buildPlot(type: string, data: Record<string, unknown>): Build {
   const config = { displayModeBar: false, responsive: true };
   const layoutBase = {
-    paper_bgcolor: "#0A1F2E",
-    plot_bgcolor: "#0A1F2E",
+    paper_bgcolor: "#0B0B0E",
+    plot_bgcolor: "#0B0B0E",
     font: { color: FOAM, family: "IBM Plex Mono, monospace", size: 12 },
     margin: { l: 52, r: 24, t: 40, b: 44 },
     xaxis: { gridcolor: SONAR_GRID, zerolinecolor: SONAR_GRID },

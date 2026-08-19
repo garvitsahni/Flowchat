@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --abyss-950: #05141f;
-  --abyss-900: #0a1f2e;
-  --abyss-800: #122c3d;
+  --abyss-950: #050507;
+  --abyss-900: #0b0b0e;
+  --abyss-800: #141418;
   --current-500: #1b4f72;
   --current-300: #3a7ca5;
   --bioluminescent-400: #2de1c2;

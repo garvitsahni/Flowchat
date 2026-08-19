@@ -18,8 +18,14 @@ export default function App() {
             DEEP-SEA INSTRUMENT PANEL · INDIAN OCEAN
           </span>
         </div>
-        <div className="font-mono text-[11px] text-current-300">
-          {language === "en" ? "en · english" : "hi · हिन्दी"}
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-1.5 font-mono text-[11px] text-current-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-bio-400 sonar-pulse" />
+            LIVE · float 2900226
+          </span>
+          <span className="font-mono text-[11px] text-current-300">
+            {language === "en" ? "en · english" : "hi · हिन्दी"}
+          </span>
         </div>
       </header>
 
