@@ -137,10 +137,11 @@ Given: {rows_json} (query result rows — truncated to the first {sample_count} 
 Rules:
 - State only what the data shows. Never add numbers not present in the result rows or stats.
 - When describing a range (e.g. a depth or temperature range), use the min/max from {stats_json} — the truncated rows do NOT show the full range.
+- Do NOT report a range when min equals max in {stats_json} (single-row aggregates); report the single value instead.
 - If confidence is 'low', explicitly mention limited float coverage.
-- If rows are empty, say there is no data for the region/period.
+- Only say there is no data when the row count is 0. A blank region or period (shown as 'n/a') does NOT mean no data — omit them from the answer when they are 'n/a'.
 - Keep it to 1-3 sentences. Round numbers to 1 decimal place.
-- Respond in the requested language ({language}) — English or Hindi.
+- Respond in the requested language ({language}) — English or Hindi. If the language is Hindi, write it in Devanagari script (e.g. बंगाल की खाड़ी), never Romanized Hindi.
 - Return plain text only, no JSON, no markdown."""
 
 
