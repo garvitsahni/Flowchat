@@ -100,7 +100,7 @@ Rules:
   and (2) reference the precomputed regional_monthly_avg table for baseline comparison
   rather than computing a multi-year average from raw rows.
 - Return output as JSON: {"sql": "...", "intent_type": "depth_profile|trajectory|
-  time_series|comparison|metadata", "explanation": "one sentence, plain language"}
+  time_series|comparison|metadata|unsupported", "explanation": "one sentence, plain language"}
 - If the question cannot be answered from this schema, return
   {"sql": null, "intent_type": "unsupported", "explanation": "..."}
 
@@ -108,9 +108,9 @@ Examples:
 [few-shot pairs below]
 ```
 
-### Example pairs (extend to 15-20 before Day 2 checkpoint)
+### Example pairs (extended to 18 before Day 2 checkpoint)
 
-**1. Depth profile**
+**1. Depth profile — region + month**
 > Q: "What was the temperature at different depths near Mumbai in December 2023?"
 ```sql
 SELECT m.depth_m, m.temperature_c
@@ -123,7 +123,7 @@ ORDER BY m.depth_m;
 ```
 `intent_type: "depth_profile"`
 
-**2. Trajectory**
+**2. Trajectory — by float ID**
 > Q: "Show me the path of float 2902123 over the last year"
 ```sql
 SELECT p.latitude, p.longitude, p.profile_date
@@ -134,7 +134,7 @@ ORDER BY p.profile_date;
 ```
 `intent_type: "trajectory"`
 
-**3. Time series**
+**3. Time series — region, temperature**
 > Q: "How has salinity changed in the Bay of Bengal over 2023?"
 ```sql
 SELECT DATE_TRUNC('month', p.profile_date) AS month, AVG(m.salinity_psu) AS avg_salinity
@@ -148,7 +148,7 @@ ORDER BY month;
 ```
 `intent_type: "time_series"`
 
-**4. Comparative / anomaly**
+**4. Comparative / anomaly — target vs precomputed baseline**
 > Q: "Was March 2023 unusually warm in the Arabian Sea?"
 ```sql
 -- target
@@ -162,7 +162,7 @@ WHERE p.region = 'Arabian Sea'
 -- baseline (from precomputed table)
 SELECT AVG(avg_temp_c) AS baseline_avg
 FROM regional_monthly_avg
-WHERE region = 'Arabian Sea' AND year_month LIKE '__-03';
+WHERE region = 'Arabian Sea' AND year_month LIKE '%-03';
 ```
 `intent_type: "comparison"`
 
@@ -194,6 +194,136 @@ WHERE region = 'Andaman Sea' AND year_month = '2019-01';
   (translate intent, not literal string matching against Hindi text in SQL)
 - Final answer-phrasing call (Gemini call #2) responds in Hindi, using
   Noto Sans Devanagari on the frontend per `DESIGN.md`
+
+**8. Depth profile — single float, full record**
+> Q: "Show the vertical temperature profile for float 2900226"
+```sql
+SELECT m.depth_m, m.temperature_c, m.salinity_psu
+FROM argo_measurements m
+JOIN argo_profiles p ON m.profile_id = p.profile_id
+WHERE p.float_id = '2900226'
+  AND m.is_valid = true
+ORDER BY m.depth_m;
+```
+`intent_type: "depth_profile"`
+
+**9. Depth profile — target a specific depth bin**
+> Q: "What's the temperature at 500m depth in the Bay of Bengal in March 2003?"
+```sql
+SELECT m.depth_m, m.temperature_c
+FROM argo_measurements m
+JOIN argo_profiles p ON m.profile_id = p.profile_id
+WHERE p.region = 'Bay of Bengal'
+  AND p.profile_date BETWEEN '2003-03-01' AND '2003-03-31'
+  AND ABS(m.depth_m - 500) < 50
+  AND m.is_valid = true
+ORDER BY m.depth_m;
+```
+`intent_type: "depth_profile"`
+
+**10. Trajectory — full lifetime**
+> Q: "Where has float 2900226 traveled since it was deployed?"
+```sql
+SELECT p.latitude, p.longitude, p.profile_date
+FROM argo_profiles p
+WHERE p.float_id = '2900226'
+ORDER BY p.profile_date;
+```
+`intent_type: "trajectory"`
+
+**11. Time series — salinity, since**
+> Q: "How did salinity change in the Bay of Bengal after 2002?"
+```sql
+SELECT DATE_TRUNC('month', p.profile_date) AS month, AVG(m.salinity_psu) AS avg_salinity
+FROM argo_measurements m
+JOIN argo_profiles p ON m.profile_id = p.profile_id
+WHERE p.region = 'Bay of Bengal'
+  AND p.profile_date >= '2002-10-01'
+  AND m.is_valid = true
+GROUP BY month
+ORDER BY month;
+```
+`intent_type: "time_series"`
+
+**12. Time series — near a city, temperature**
+> Q: "What's the temperature trend off the coast of Chennai since 2002?"
+```sql
+SELECT DATE_TRUNC('month', p.profile_date) AS month, AVG(m.temperature_c) AS avg_temp
+FROM argo_measurements m
+JOIN argo_profiles p ON m.profile_id = p.profile_id
+WHERE ST_DWithin(p.location, ST_MakePoint(80.2707, 13.0827)::geography, 200000)
+  AND p.profile_date >= '2002-01-01'
+  AND m.is_valid = true
+GROUP BY month
+ORDER BY month;
+```
+`intent_type: "time_series"`
+
+**13. Comparison — colder-than-average target**
+> Q: "Was February 2004 colder than usual in the Bay of Bengal?"
+```sql
+-- target
+SELECT AVG(m.temperature_c) AS target_avg
+FROM argo_measurements m
+JOIN argo_profiles p ON m.profile_id = p.profile_id
+WHERE p.region = 'Bay of Bengal'
+  AND p.profile_date BETWEEN '2004-02-01' AND '2004-02-29'
+  AND m.is_valid = true;
+
+-- baseline (same calendar month across all years)
+SELECT AVG(avg_temp_c) AS baseline_avg
+FROM regional_monthly_avg
+WHERE region = 'Bay of Bengal' AND year_month LIKE '%-02';
+```
+`intent_type: "comparison"`
+
+**14. Metadata — float status**
+> Q: "Is float 2900226 still reporting?"
+```sql
+SELECT float_id, deploy_date, deploy_lat, deploy_lon, status
+FROM argo_floats
+WHERE float_id = '2900226';
+```
+`intent_type: "metadata"`
+
+**15. Metadata — active floats in a region**
+> Q: "Which floats are active in the Bay of Bengal?"
+```sql
+SELECT f.float_id, f.deploy_date, f.deploy_lat, f.deploy_lon, f.status
+FROM argo_floats f
+JOIN argo_profiles p ON p.float_id = f.float_id
+WHERE f.status = 'active' AND p.region = 'Bay of Bengal'
+GROUP BY f.float_id, f.deploy_date, f.deploy_lat, f.deploy_lon, f.status;
+```
+`intent_type: "metadata"`
+
+**16. Data quality — explicit QC question**
+> Q: "How many readings failed quality checks in the Bay of Bengal in 2003?"
+```sql
+SELECT year_month, float_count, profile_count, total_readings,
+       excluded_readings, qc_pass_ratio
+FROM qc_stats
+WHERE region = 'Bay of Bengal' AND year_month LIKE '2003-%'
+ORDER BY year_month;
+```
+`intent_type: "metadata"` — note: user explicitly asked about QC, so do NOT filter `is_valid`.
+
+**17. No-data path (graceful)**
+> Q: "What was the temperature in the Arabian Sea in July 2004?"
+→ Region/period exist in schema but no ingested data:
+```json
+{"sql": "SELECT ... (matches the depth-profile pattern above)",
+ "intent_type": "depth_profile",
+ "explanation": "Region/date query; backend will surface no-data gracefully."}
+```
+Backend handles the empty result set → graceful message, never a fabricated number.
+
+**18. Ambiguous / unsupported intent**
+> Q: "What do you think about the ocean?"
+```json
+{"sql": null, "intent_type": "unsupported",
+ "explanation": "This question cannot be answered from the float data schema."}
+```
 
 ---
 

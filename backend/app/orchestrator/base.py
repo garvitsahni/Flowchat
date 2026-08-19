@@ -38,6 +38,6 @@ class LLMProvider(Protocol):
         """Turn a natural-language question into validated SQL + intent metadata."""
         ...
 
-    def phrase_answer(self, result: QueryResult, confidence: str) -> str:
+    def phrase_answer(self, result: QueryResult, confidence: str, language: str = "en") -> str:
         """Turn raw result rows into a natural-language answer (phrasing pass)."""
         ...

@@ -1,6 +1,11 @@
 # FloatChat — Demo Script & Pitch Narrative
 **Internal Hackathon | Target runtime: 6-8 minutes**
 
+> **Live-data scope (Phase 2):** every beat below is verified against the real ingested
+> subset — float 2900226, Bay of Bengal, 2002-10 → 2004-08. Query the exact strings
+> given; do not improvise regions/dates that have no data (Arabian Sea, Andaman Sea,
+> Mumbai, 2019/2023) — those render the graceful no-data path, not the intended beat.
+
 ---
 
 ## 1. Narrative Arc
@@ -31,14 +36,17 @@ Do not explain every feature up front. Let the demo reveal them.
 
 **Ask a deliberately sparse/low-quality-data question live.**
 
-> "Let's start somewhere most demos wouldn't dare — a region with genuinely thin data."
+> "Let's start somewhere most demos wouldn't dare — a question where the data is real
+> but the coverage is genuinely thin."
 
-Type: *"What was the salinity near the Andaman Islands in January 2019?"*
+Type: *"How did temperature change in the Bay of Bengal in 2003?"*
 
-- FloatChat returns an answer **with a visible low-confidence badge**
+- FloatChat returns a real time-series chart **with a visible low-confidence badge**
 - Say out loud: *"Notice it didn't just give us a confident-looking number. It's telling
-  us exactly why to be skeptical — float coverage was thin, or **QC failure rate was
-  high**. Most systems would silently interpolate and hand you a clean chart anyway."*
+  us exactly why to be skeptical — float coverage was thin (this is one float), so
+  confidence is low. Most systems would silently interpolate and hand you a clean chart
+  anyway."*
+- The explainability drawer also shows QC-excluded readings if you open it.
 
 **Then show an out-of-scope refusal.**
 
@@ -54,13 +62,13 @@ fatigue from watching 15 teams show a chart appear after a question.
 
 ## 4. Demo Beat 2 — Trust Mechanics on a Real Answer (90 sec)
 
-Type: *"What was the temperature at different depths near Mumbai in December 2023?"*
+Type: *"Show the vertical temperature profile for float 2900226"*
 
-- Depth-profile chart renders
+- Depth-profile chart renders (2,475 real depth levels, 6.1°C → 30.4°C)
 - Click **"How I got this"** — expand the explainability drawer live
 - Narrate: *"This is the actual SQL query generated from natural language, the specific
-  float IDs used, and how many readings we excluded for failing quality checks. Nothing
-  here is a black box."*
+  float ID used (2900226), and how many readings we excluded for failing quality checks.
+  Nothing here is a black box."*
 
 This is the single most memorable beat if delivered well — pause on it, don't rush past.
 
@@ -68,11 +76,14 @@ This is the single most memorable beat if delivered well — pause on it, don't 
 
 ## 5. Demo Beat 3 — Insight, Not Just Retrieval (90 sec)
 
-Type: *"Was March 2023 unusually warm in the Arabian Sea?"*
+Type: *"Was March 2003 unusually warm in the Bay of Bengal?"*
 
-- Comparison chart renders: target period vs. 5-year baseline
+- Comparison chart renders: target period (March 2003) vs. the same-month baseline from
+  the precomputed `regional_monthly_avg` table — 22.0°C vs 12.3°C, i.e. 9.7°C warmer
 - Narrate: *"This isn't a lookup anymore — it's telling us something happened. This is
-  the kind of question a climate analyst actually asks, not just 'what was the number.'"*
+  the kind of question a climate analyst actually asks, not just 'what was the number.'"
+  (Note the low-confidence badge here too — one float, so the numbers are honest about
+  their limits.)*
 
 Tie explicitly to MoES's mandate: *"This is directly useful for the kind of ocean-climate
 monitoring this ministry already cares about."*
@@ -81,9 +92,12 @@ monitoring this ministry already cares about."*
 
 ## 6. Demo Beat 4 — Vernacular Access (45-60 sec)
 
-Type in Hindi: *"मुंबई के पास पिछले महीने समुद्र का तापमान कितना था?"*
+Type in Hindi: *"बंगाल की खाड़ी में 2003 में तापमान कैसे बदला?"*
+(How did temperature change in the Bay of Bengal in 2003?)
 
-- Full round trip: Hindi in, Hindi-language answer + chart out
+- Full round trip: Hindi in, Hindi-language answer + chart out (requires a provider key —
+  `LLM_PROVIDER` + API key in `.env`; without a key the mock provider answers in English
+  but still accepts the Hindi query)
 - Narrate: *"Ocean data affects coastal and fishing communities directly, and most of them
   don't query databases in English. This isn't a translation bolt-on — it's a first-class
   path through the same trust pipeline you just watched."*
@@ -115,7 +129,7 @@ skim this, don't narrate every box:
 | Question | Answer direction |
 |---|---|
 | "How do you handle hallucination?" | Two-call separation (SQL generation vs. answer phrasing), guardrail layer, explainability panel, plus "the model never has raw DB access" |
-| "Is this real data or synthetic?" | Point to source (INCOIS/Ifremer), specific region/date range ingested, mention any validation against known events if you did it |
+| "Is this real data or synthetic?" | Point to source (INCOIS/Ifremer), specific region/date range ingested (float 2900226, Bay of Bengal 2002-2004), mention any validation against known events if you did it |
 | "How does this scale beyond the Indian Ocean?" | Schema and pipeline are region-agnostic; scope was deliberately narrowed for data quality and demo reliability, not a technical ceiling |
 | "What happens with an ambiguous question?" | Show/describe the unsupported-intent path — graceful refusal, not a guess |
 | "Why not just use [existing ARGO tool]?" | Existing tools (Ocean Data View, Argovis) require domain expertise to operate; FloatChat's entire value is removing that barrier via natural language, while keeping the trust guarantees a scientist would require |

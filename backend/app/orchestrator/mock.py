@@ -73,7 +73,7 @@ class MockProvider:
         # Default fallback: depth/time-series style query near a known anchor
         return self._depth_profile(q, language)
 
-    def phrase_answer(self, result: QueryResult, confidence: str) -> str:
+    def phrase_answer(self, result: QueryResult, confidence: str, language: str = "en") -> str:
         """Deterministic phrasing pass (1 decimal, no invented numbers)."""
         rows = result.rows
         if not rows:
@@ -298,7 +298,7 @@ ORDER BY month"""
             month_like = label.split("-")[1]
         month_filter = ""
         if month_like:
-            month_filter = f" AND year_month LIKE '__-{month_like}'"
+            month_filter = f" AND year_month LIKE '%-{month_like}'"
         sql = f"""
 SELECT AVG(m.temperature_c) AS target_avg
 FROM argo_measurements m
@@ -371,26 +371,33 @@ WHERE region = '{region}'{month_filter};"""
         region = result.region or "this region"
         note = " Confidence is low due to limited float coverage." if confidence == "low" else ""
         if abs(delta) < 0.1:
-            return f"{region.capitalize()} was about average ({target:.1f}°C) for this period.{note}"
+            return f"{region} was about average ({target:.1f}°C) for this period.{note}"
         direction = "warmer" if delta > 0 else "cooler"
         return (
-            f"{region.capitalize()} was {abs(delta):.1f}°C {direction} than the "
+            f"{region} was {abs(delta):.1f}°C {direction} than the "
             f"historical average for this period ({target:.1f}°C vs {baseline:.1f}°C).{note}"
         )
 
 
 def provider_factory(name: str | None = None) -> LLMProvider:
-    """Return the active provider. Mock is the default until a key is present."""
+    """Return the active provider.
+
+    A real provider only activates when BOTH LLM_PROVIDER names it AND its API key is
+    present (config keys `*_api_key`). Missing key → deterministic mock, so the app
+    never crashes when a key is absent.
+    """
+    from ..config import settings
+
     chosen = (name or "").lower()
-    if chosen == "gemini":
+    if chosen == "gemini" and settings.gemini_api_key:
         from .gemini import GeminiProvider
 
         return GeminiProvider()
-    if chosen == "openrouter":
+    if chosen == "openrouter" and settings.openrouter_api_key:
         from .openrouter import OpenRouterProvider
 
         return OpenRouterProvider()
-    if chosen == "grok":
+    if chosen == "grok" and settings.grok_api_key:
         from .grok import GrokProvider
 
         return GrokProvider()

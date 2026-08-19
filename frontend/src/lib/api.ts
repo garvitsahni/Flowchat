@@ -1,7 +1,7 @@
 import type { Language, QueryResponse } from "../types";
 import { askMock } from "./mock";
 
-const USE_MOCK = (import.meta.env.VITE_USE_MOCK ?? "true") !== "false";
+const USE_MOCK = (import.meta.env.VITE_USE_MOCK ?? "false") === "true";
 
 export async function ask(question: string, language: Language): Promise<QueryResponse> {
   if (USE_MOCK) {

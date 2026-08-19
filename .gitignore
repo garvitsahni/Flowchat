@@ -24,5 +24,6 @@ Thumbs.db
 .idea/
 .vscode/
 frontend/dev.log
+frontend/dev-err.log
 frontend/dist/
 

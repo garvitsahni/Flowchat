@@ -107,7 +107,7 @@ async def query(req: QueryRequest) -> QueryResponse:
     confidence = await assess(result.region or generated.requested_region, year_month)
     result.qc_excluded_count = confidence.qc_excluded_count
 
-    answer_text = provider.phrase_answer(result, confidence.confidence)
+    answer_text = provider.phrase_answer(result, confidence.confidence, req.language)
     if not answer_text:
         answer_text = answers.fallback_answer(result, confidence.confidence)
 
