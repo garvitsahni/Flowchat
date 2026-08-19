@@ -82,14 +82,14 @@ export function ChatPanel({
 
   return (
     <div className="flex h-full flex-col">
-      <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-1 py-4">
+      <div ref={scrollRef} className="flex-1 space-y-5 overflow-y-auto px-1 py-4">
         {empty ? (
           <div className="flex h-full flex-col items-center justify-center px-2 text-center">
             <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-bio-400/30 bg-abyss-800/80">
               <SonarIcon />
             </div>
-            <p className="font-mono text-sm text-foam-200">Ask about the Indian Ocean float data.</p>
-            <p className="mt-1 font-mono text-[11px] text-current-300">
+            <p className="font-mono text-[15px] text-foam-200">Ask about the Indian Ocean float data.</p>
+            <p className="mt-1 font-mono text-xs text-current-300">
               Live dataset: float 2900226 · Bay of Bengal · Oct 2002 – Aug 2004 · 125 profiles
             </p>
             <div className="mx-auto mt-5 flex max-w-lg flex-wrap justify-center gap-2">
@@ -99,7 +99,7 @@ export function ChatPanel({
                   type="button"
                   onClick={() => void send(s)}
                   disabled={busy}
-                  className="rounded-full border border-current-500/50 bg-abyss-800/60 px-3.5 py-1.5 text-[13px] text-foam-200 transition-colors hover:border-bio-400/70 hover:text-foam-50 disabled:opacity-50"
+                  className="rounded-full border border-current-500/50 bg-abyss-800/60 px-4 py-2 text-[14px] text-foam-200 transition-colors hover:border-bio-400/70 hover:text-foam-50 disabled:opacity-50"
                 >
                   {s}
                 </button>
@@ -111,7 +111,7 @@ export function ChatPanel({
             {messages.map((msg, i) =>
               msg.role === "user" ? (
                 <div key={i} className="flex justify-end">
-                  <div className="max-w-[80%] rounded-2xl rounded-br-sm border border-current-500 bg-current-500/70 px-3.5 py-2 text-[14px] leading-relaxed text-foam-50">
+                  <div className="max-w-[80%] rounded-2xl rounded-br-sm border border-current-500 bg-current-500/70 px-4 py-2.5 text-[15px] leading-relaxed text-foam-50">
                     {msg.text}
                   </div>
                 </div>
@@ -119,7 +119,7 @@ export function ChatPanel({
                 <div key={i} className="flex justify-start">
                   <div
                     className={cn(
-                      "max-w-[85%] rounded-2xl rounded-bl-sm border-l-2 bg-abyss-800 px-3.5 py-2.5",
+                      "max-w-[85%] rounded-2xl rounded-bl-sm border-l-2 bg-abyss-800 px-4 py-2.5",
                       msg.kind === "error"
                         ? "border-flag-500"
                         : msg.kind === "refusal"
@@ -129,14 +129,14 @@ export function ChatPanel({
                   >
                     <p
                       className={cn(
-                        "text-[14px] leading-relaxed text-foam-50",
-                        msg.kind === "error" && "font-mono text-[13px] text-flag-500"
+                        "text-[15px] leading-relaxed text-foam-50",
+                        msg.kind === "error" && "font-mono text-[14px] text-flag-500"
                       )}
                     >
                       {msg.text}
                     </p>
                     {msg.kind === "refusal" && (
-                      <div className="mt-1.5 font-mono text-[11px] uppercase tracking-widest text-scan-500">
+                      <div className="mt-1.5 font-mono text-xs uppercase tracking-widest text-scan-500">
                         {msg.response?.refusal_reason === "no_data"
                           ? "no data in scope"
                           : msg.response?.refusal_reason === "unsafe"
@@ -190,7 +190,7 @@ export function ChatPanel({
               placeholder="Ask about floats, regions, or measurements…"
               disabled={busy}
               rows={1}
-              className="w-full resize-none overflow-hidden bg-transparent px-3.5 pb-0 pt-3 text-[14px] leading-[1.6] text-foam-50 outline-none placeholder:text-foam-200/40 disabled:opacity-60"
+              className="w-full resize-none overflow-hidden bg-transparent px-4 pb-0 pt-3.5 text-[15px] leading-[1.6] text-foam-50 outline-none placeholder:text-foam-200/40 disabled:opacity-60"
             />
             <div className="flex items-center justify-between gap-3 px-2 pb-2">
               <div className="flex items-center gap-1 pl-1.5">
@@ -211,9 +211,6 @@ export function ChatPanel({
               </button>
             </div>
           </div>
-          <p className="mt-1.5 text-center font-mono text-[10px] tracking-wide text-current-300">
-            enter to send · shift+enter for a new line
-          </p>
         </form>
       </div>
     </div>
@@ -235,7 +232,7 @@ function LanguageToggle({
           type="button"
           onClick={() => onChange(lang)}
           className={cn(
-            "px-2.5 py-1 font-mono text-[11px] transition-colors",
+            "px-2.5 py-1 font-mono text-xs transition-colors",
             language === lang
               ? "bg-bio-400/15 text-bio-400"
               : "text-foam-200/60 hover:text-foam-50"
