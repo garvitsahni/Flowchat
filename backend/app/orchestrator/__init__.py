@@ -1,0 +1,1 @@
+"""AI Orchestrator package — NL→SQL + answer phrasing via a pluggable provider."""
