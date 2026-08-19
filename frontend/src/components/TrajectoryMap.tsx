@@ -71,7 +71,7 @@ export function TrajectoryMap({
   return (
     <div className="relative h-full w-full overflow-hidden rounded-lg border border-current-500/40 bg-abyss-900">
       <div ref={containerRef} className="h-full w-full" />
-      <div className="pointer-events-none absolute left-3 top-3 z-[1000] rounded bg-abyss-950/80 px-2 py-1 font-mono text-xs text-foam-50">
+      <div className="pointer-events-none absolute left-3 top-3 z-[1000] rounded bg-abyss-950/80 px-2 py-1 font-mono text-[13px] text-foam-50">
         float <span className="text-bio-400">{floatId}</span> · trajectory
       </div>
     </div>

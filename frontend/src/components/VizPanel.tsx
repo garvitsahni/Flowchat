@@ -37,10 +37,10 @@ export function VizPanel({ response }: { response: QueryResponse | null }) {
             <circle cx="12" cy="12" r="11" className="text-bio-400/25" />
           </svg>
         </div>
-        <p className="font-mono text-xs text-current-300">
+        <p className="font-mono text-[13px] text-current-300">
           query the floats to render a visualization
         </p>
-        <p className="max-w-xs font-mono text-[11px] leading-relaxed text-foam-200/50">
+        <p className="max-w-xs font-mono text-xs leading-relaxed text-foam-200/50">
           live dataset: float 2900226 · Bay of Bengal · Oct 2002 – Aug 2004 · 125 profiles
         </p>
       </div>
@@ -94,8 +94,8 @@ function VizInner({
           : "this question is outside the Indian Ocean ARGO subset";
     return (
       <div className="flex h-full min-h-64 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-scan-500/40 bg-abyss-900 p-6 text-center">
-        <p className="font-mono text-[11px] uppercase tracking-widest text-scan-500">{title}</p>
-        <p className="max-w-xs font-mono text-xs leading-relaxed text-foam-200/70">{detail}</p>
+        <p className="font-mono text-xs uppercase tracking-widest text-scan-500">{title}</p>
+        <p className="max-w-xs font-mono text-[13px] leading-relaxed text-foam-200/70">{detail}</p>
       </div>
     );
   }
@@ -113,10 +113,10 @@ function VizInner({
   if (type === "comparison" && (data.target === null || data.baseline === null)) {
     return (
       <div className="flex h-full min-h-64 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-scan-500/40 bg-abyss-900 p-6 text-center">
-        <p className="font-mono text-[11px] uppercase tracking-widest text-scan-500">
+        <p className="font-mono text-xs uppercase tracking-widest text-scan-500">
           insufficient data
         </p>
-        <p className="max-w-xs font-mono text-xs leading-relaxed text-foam-200/70">
+        <p className="max-w-xs font-mono text-[13px] leading-relaxed text-foam-200/70">
           not enough measurements in this region and period to compare against a baseline
         </p>
       </div>
