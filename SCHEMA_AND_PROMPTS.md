@@ -328,7 +328,18 @@ ORDER BY year_month;
 ```
 Backend handles the empty result set → graceful message, never a fabricated number.
 
-**18. Ambiguous / unsupported intent**
+**18. Metadata — dataset coverage**
+> Q: "Which floats are in the dataset?"
+```sql
+SELECT DISTINCT float_id
+FROM argo_floats
+ORDER BY float_id;
+```
+`intent_type: "metadata"` — surfaces what floats exist (e.g. 2900226), so the scope of the
+dataset is discoverable from a natural question rather than requiring the user to know a
+WMO ID beforehand.
+
+**19. Ambiguous / unsupported intent**
 > Q: "What do you think about the ocean?"
 ```json
 {"sql": null, "intent_type": "unsupported",

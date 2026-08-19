@@ -109,6 +109,10 @@ FEW_SHOT: list[tuple[str, str]] = [
         '{"sql": "SELECT m.depth_m, m.temperature_c, m.salinity_psu FROM argo_measurements m JOIN argo_profiles p ON m.profile_id = p.profile_id WHERE p.region = \'Arabian Sea\' AND p.profile_date BETWEEN \'2004-07-01\' AND \'2004-07-31\' AND m.is_valid = true ORDER BY m.depth_m", "intent_type": "depth_profile", "explanation": "Depth profile for the Arabian Sea in July 2004; backend surfaces no-data gracefully if empty.", "requested_period": "2004-07", "requested_region": "Arabian Sea"}',
     ),
     (
+        "Which floats are in the dataset?",
+        '{"sql": "SELECT DISTINCT float_id FROM argo_floats ORDER BY float_id", "intent_type": "metadata", "explanation": "List the floats available in the dataset.", "requested_period": "", "requested_region": ""}',
+    ),
+    (
         "What do you think about the ocean?",
         '{"sql": null, "intent_type": "unsupported", "explanation": "This question cannot be answered from the float data schema.", "requested_period": "", "requested_region": ""}',
     ),
@@ -141,6 +145,7 @@ Rules:
 - If a column's min equals its max in {stats_json} (single-row aggregate), it is a single value, NOT a range: state the one value and never write a phrase like 'X to X' or 'range of X to X'.
 - If confidence is 'low', explicitly mention limited float coverage.
 - Only say there is no data when the row count is 0. A blank region or period (shown as 'n/a') does NOT mean no data — omit them from the answer when they are 'n/a'.
+- If the rows contain identifier columns (e.g. float_id) with no numeric columns, list the identifiers directly — do not claim there is no data just because there are no numeric values.
 - Keep it to 1-3 sentences. Round numbers to 1 decimal place.
 - Respond in the requested language ({language}) — English or Hindi. If the language is Hindi, write it in Devanagari script (e.g. बंगाल की खाड़ी), never Romanized Hindi.
 - Return plain text only, no JSON, no markdown."""

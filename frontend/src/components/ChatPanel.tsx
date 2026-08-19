@@ -13,10 +13,10 @@ interface Message {
 }
 
 const SUGGESTIONS = [
-  "Show the depth profile of temperature for float 2900226",
-  "Where has float 2900226 traveled?",
-  "How has temperature changed in the Bay of Bengal since 2003?",
-  "Was 2003 unusually warm in the Arabian Sea?",
+  "How did temperature change in the Bay of Bengal in 2003?",
+  "Show the depth profile for float 2900226",
+  "Was March 2003 unusually warm in the Bay of Bengal?",
+  "बंगाल की खाड़ी में 2003 में तापमान कैसे बदला?",
 ];
 
 export function ChatPanel({
@@ -75,6 +75,9 @@ export function ChatPanel({
         {messages.length === 0 && (
           <div className="pt-8 text-center">
             <p className="font-mono text-sm text-foam-200">Ask about the Indian Ocean float data.</p>
+            <p className="mt-1 font-mono text-[11px] text-current-300">
+              Live dataset: float 2900226 · Bay of Bengal · Oct 2002 – Aug 2004 · 125 profiles
+            </p>
             <div className="mx-auto mt-5 flex max-w-md flex-col gap-2">
               {SUGGESTIONS.map((s) => (
                 <button
