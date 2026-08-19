@@ -32,6 +32,7 @@ Rules:
 - trajectory -> SELECT p.latitude, p.longitude, p.profile_date from argo_profiles, ORDER BY p.profile_date.
 - time_series -> SELECT DATE_TRUNC('month', p.profile_date) AS month, AVG(...) AS avg_temp|avg_salinity, GROUP BY month ORDER BY month.
 - comparison -> emit TWO statements separated by a semicolon: (1) target AVG(m.temperature_c) AS target_avg for the target period; (2) baseline AVG(avg_temp_c) AS baseline_avg from regional_monthly_avg with year_month LIKE '%-<month>' (e.g. '%-03' for March, since year_month is 'YYYY-MM').
+- Never use subqueries, CTEs (WITH), or nested FROM (SELECT ...). Every query must be a flat SELECT over the base tables directly (JOINs are fine). Comparison = exactly two flat SELECTs separated by ';'.
 - metadata -> SELECT from argo_floats / qc_stats for status, active floats, or data-quality questions.
 - requested_period = human label like '2023-03' or '2003 (this year)' or 'last month'. requested_region = 'Arabian Sea'|'Bay of Bengal'|'Andaman Sea'|city name|''.
 - If the question cannot be answered from this schema (non-ocean, outside Indian Ocean, opinion), return {{"sql": null, "intent_type": "unsupported", "explanation": "short plain-language reason", "requested_period": "", "requested_region": ""}}.
@@ -137,7 +138,7 @@ Given: {rows_json} (query result rows — truncated to the first {sample_count} 
 Rules:
 - State only what the data shows. Never add numbers not present in the result rows or stats.
 - When describing a range (e.g. a depth or temperature range), use the min/max from {stats_json} — the truncated rows do NOT show the full range.
-- Do NOT report a range when min equals max in {stats_json} (single-row aggregates); report the single value instead.
+- If a column's min equals its max in {stats_json} (single-row aggregate), it is a single value, NOT a range: state the one value and never write a phrase like 'X to X' or 'range of X to X'.
 - If confidence is 'low', explicitly mention limited float coverage.
 - Only say there is no data when the row count is 0. A blank region or period (shown as 'n/a') does NOT mean no data — omit them from the answer when they are 'n/a'.
 - Keep it to 1-3 sentences. Round numbers to 1 decimal place.

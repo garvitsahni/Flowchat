@@ -7,6 +7,7 @@ needs a SelectorEventLoop; uvicorn's default Proactor loop breaks it).
 from __future__ import annotations
 
 import logging
+import re
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -71,6 +72,21 @@ def _extract_year_month(period: str) -> str | None:
     return None
 
 
+_EQUAL_RANGE_RE = re.compile(
+    r"\b(from\s+)?(\d+(?:\.\d+)?)\s+to\s+(\d+(?:\.\d+)?)\b",
+    re.IGNORECASE,
+)
+
+
+def _clean_phrase(text: str) -> str:
+    """Deterministically collapse equal-value ranges ('21.9 to 21.9') the LLM
+    sometimes emits for single-row aggregates, leaving real ranges intact."""
+    return _EQUAL_RANGE_RE.sub(
+        lambda m: m.group(2) if m.group(2) == m.group(3) else m.group(0),
+        text,
+    )
+
+
 @app.post("/query", response_model=QueryResponse)
 async def query(req: QueryRequest) -> QueryResponse:
     provider = provider_factory(settings.llm_provider)
@@ -104,7 +120,30 @@ async def query(req: QueryRequest) -> QueryResponse:
             "I couldn't safely answer that question.", req.language, reason="unsafe"
         )
 
-    rows_by_statement = await execute_statements(statements)
+    rows_by_statement: list[list[dict]] | None = None
+    try:
+        rows_by_statement = await execute_statements(statements)
+    except Exception:
+        # Invalid-but-schema-valid SQL (e.g. a subquery the small model botched) must
+        # degrade gracefully — fall back to the deterministic mock's SQL before refusing.
+        logger.exception(
+            "Executing validated SQL failed; retrying with mock provider. SQL=%s", generated.sql
+        )
+        from .orchestrator.mock import MockProvider
+
+        mock = MockProvider()
+        generated = mock.generate_sql(req.question, req.language)
+        if generated.sql is None:
+            return _graceful_refusal(generated.explanation, req.language)
+        try:
+            statements = guardrails.validate_sql(generated.sql)
+            rows_by_statement = await execute_statements(statements)
+        except Exception:
+            logger.exception("Mock fallback also failed; refusing gracefully.")
+            return _graceful_refusal(
+                "I couldn't safely answer that question.", req.language, reason="unsafe"
+            )
+
     result = build_result(
         rows_by_statement,
         region=generated.requested_region,
@@ -129,6 +168,7 @@ async def query(req: QueryRequest) -> QueryResponse:
         answer_text = ""
     if not answer_text:
         answer_text = answers.fallback_answer(result, confidence.confidence)
+    answer_text = _clean_phrase(answer_text)
 
     float_ids = result.float_ids or [r["float_id"] for r in result.rows if r.get("float_id")]
     if not float_ids:
