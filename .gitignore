@@ -22,4 +22,6 @@ data/netcdf/
 .DS_Store
 Thumbs.db
 .idea/
-.vscode/
+.vscode/frontend/dev.log
+frontend/dist/
+
