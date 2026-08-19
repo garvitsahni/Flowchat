@@ -49,7 +49,9 @@ async def health() -> HealthResponse:
     return HealthResponse(status="ok", db_connected=await ping())
 
 
-def _graceful_refusal(explanation: str, language: str) -> QueryResponse:
+def _graceful_refusal(
+    explanation: str, language: str, reason: str = "out_of_scope"
+) -> QueryResponse:
     return QueryResponse(
         answer_text=explanation if language == "en" else (
             "यह प्रश्न वर्तमान डेटासेट के दायरे से बाहर है।"
@@ -58,6 +60,7 @@ def _graceful_refusal(explanation: str, language: str) -> QueryResponse:
         chart_type="none",
         confidence="high",
         confidence_note="",
+        refusal_reason=reason,
         explainability=Explainability(sql="", floats_used=[], qc_excluded_count=0),
     )
 
@@ -97,7 +100,9 @@ async def query(req: QueryRequest) -> QueryResponse:
         statements = guardrails.validate_sql(generated.sql)
     except GuardrailViolation as exc:
         logger.warning("Guardrail rejection: %s", exc.reason)
-        return _graceful_refusal("I couldn't safely answer that question.", req.language)
+        return _graceful_refusal(
+            "I couldn't safely answer that question.", req.language, reason="unsafe"
+        )
 
     rows_by_statement = await execute_statements(statements)
     result = build_result(
@@ -110,6 +115,7 @@ async def query(req: QueryRequest) -> QueryResponse:
         return _graceful_refusal(
             "No data available for this region and time period.",
             req.language,
+            reason="no_data",
         )
 
     year_month = _extract_year_month(generated.requested_period)

@@ -64,6 +64,10 @@ FEW_SHOT: list[tuple[str, str]] = [
         '{"sql": "SELECT m.depth_m, m.temperature_c FROM argo_measurements m JOIN argo_profiles p ON m.profile_id = p.profile_id WHERE ST_DWithin(p.location, ST_MakePoint(72.8777, 19.0760)::geography, 200000) AND p.profile_date >= date_trunc(\'month\', NOW()) - INTERVAL \'1 month\' AND p.profile_date < date_trunc(\'month\', NOW()) AND m.is_valid = true ORDER BY m.depth_m", "intent_type": "depth_profile", "explanation": "Mumbai depth profile for last month (Hindi intent).", "requested_period": "last month", "requested_region": "Mumbai"}',
     ),
     (
+        "बंगाल की खाड़ी में 2003 में तापमान कैसे बदला?",
+        '{"sql": "SELECT DATE_TRUNC(\'month\', p.profile_date) AS month, AVG(m.temperature_c) AS avg_temp FROM argo_measurements m JOIN argo_profiles p ON m.profile_id = p.profile_id WHERE p.region = \'Bay of Bengal\' AND p.profile_date >= \'2003-01-01\' AND p.profile_date < \'2004-01-01\' AND m.is_valid = true GROUP BY month ORDER BY month", "intent_type": "time_series", "explanation": "Monthly temperature trend in the Bay of Bengal for 2003 (Hindi intent).", "requested_period": "2003", "requested_region": "Bay of Bengal"}',
+    ),
+    (
         "Show the vertical temperature profile for float 2900226",
         '{"sql": "SELECT m.depth_m, m.temperature_c, m.salinity_psu FROM argo_measurements m JOIN argo_profiles p ON m.profile_id = p.profile_id WHERE p.float_id = \'2900226\' AND m.is_valid = true ORDER BY m.depth_m", "intent_type": "depth_profile", "explanation": "Full depth profile for float 2900226.", "requested_period": "", "requested_region": ""}',
     ),

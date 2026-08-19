@@ -6,6 +6,7 @@ export type ChartType =
   | "comparison"
   | "none";
 export type Confidence = "high" | "low";
+export type RefusalReason = "" | "out_of_scope" | "no_data" | "unsafe";
 
 export interface Explainability {
   sql: string;
@@ -21,5 +22,6 @@ export interface QueryResponse {
   chart_data: Record<string, unknown>;
   confidence: Confidence;
   confidence_note: string;
+  refusal_reason?: RefusalReason;
   explainability: Explainability;
 }

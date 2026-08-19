@@ -195,6 +195,16 @@ WHERE region = 'Andaman Sea' AND year_month = '2019-01';
 - Final answer-phrasing call (Gemini call #2) responds in Hindi, using
   Noto Sans Devanagari on the frontend per `DESIGN.md`
 
+**7b. Hindi round-trip — time series**
+> Q: "बंगाल की खाड़ी में 2003 में तापमान कैसे बदला?"
+```json
+{"sql": "SELECT DATE_TRUNC('month', p.profile_date) AS month, AVG(m.temperature_c) AS avg_temp FROM argo_measurements m JOIN argo_profiles p ON m.profile_id = p.profile_id WHERE p.region = 'Bay of Bengal' AND p.profile_date >= '2003-01-01' AND p.profile_date < '2004-01-01' AND m.is_valid = true GROUP BY month ORDER BY month",
+ "intent_type": "time_series",
+ "explanation": "Monthly temperature trend in the Bay of Bengal for 2003 (Hindi intent)."}
+```
+- Mirrors the demo's Beat 4 phrasing so the few-shot set pins the intent instead of
+  leaving gpt-oss-class models to guess between depth_profile and time_series.
+
 **8. Depth profile — single float, full record**
 > Q: "Show the vertical temperature profile for float 2900226"
 ```sql

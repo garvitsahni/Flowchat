@@ -9,6 +9,7 @@ interface Message {
   role: "user" | "system";
   text: string;
   response?: QueryResponse;
+  kind?: "error" | "refusal";
 }
 
 const SUGGESTIONS = [
@@ -44,7 +45,9 @@ export function ChatPanel({
     setMessages((m) => [...m, { role: "user", text }]);
     try {
       const response = await ask(text, language);
-      setMessages((m) => [...m, { role: "system", text: response.answer_text, response }]);
+      const kind: Message["kind"] =
+        response.chart_type === "none" && response.refusal_reason ? "refusal" : undefined;
+      setMessages((m) => [...m, { role: "system", text: response.answer_text, response, kind }]);
       onVizChange(response);
     } catch (err) {
       setMessages((m) => [
@@ -52,6 +55,7 @@ export function ChatPanel({
         {
           role: "system",
           text: err instanceof Error ? err.message : "Something went wrong.",
+          kind: "error",
         },
       ]);
       onVizChange(null);
@@ -94,9 +98,32 @@ export function ChatPanel({
                 {msg.text}
               </div>
             ) : (
-              <div className="max-w-[85%] border-l-2 border-bio-400 bg-abyss-800 px-3 py-2.5">
-                <p className="text-[14px] leading-relaxed text-foam-50">{msg.text}</p>
-                {msg.response && (
+              <div
+                className={`max-w-[85%] border-l-2 bg-abyss-800 px-3 py-2.5 ${
+                  msg.kind === "error"
+                    ? "border-flag-500"
+                    : msg.kind === "refusal"
+                      ? "border-scan-500"
+                      : "border-bio-400"
+                }`}
+              >
+                <p
+                  className={`text-[14px] leading-relaxed text-foam-50 ${
+                    msg.kind === "error" ? "font-mono text-[13px] text-flag-500" : ""
+                  }`}
+                >
+                  {msg.text}
+                </p>
+                {msg.kind === "refusal" && (
+                  <div className="mt-1.5 font-mono text-[11px] uppercase tracking-widest text-scan-500">
+                    {msg.response?.refusal_reason === "no_data"
+                      ? "no data in scope"
+                      : msg.response?.refusal_reason === "unsafe"
+                        ? "couldn't answer safely"
+                        : "out of scope"}
+                  </div>
+                )}
+                {msg.response && msg.kind !== "refusal" && (
                   <div className="mt-2 flex items-center gap-3">
                     <ConfidenceBadge
                       confidence={msg.response.confidence}
@@ -104,7 +131,7 @@ export function ChatPanel({
                     />
                   </div>
                 )}
-                {msg.response && (
+                {msg.response && msg.kind !== "refusal" && (
                   <ExplainabilityDrawer info={msg.response.explainability} />
                 )}
               </div>

@@ -37,7 +37,7 @@ class GroqProvider(LLMChatProvider):
             json={
                 "model": settings.groq_model,
                 "messages": messages,
-                "temperature": 0.2,
+                "temperature": 0.0,
                 "max_completion_tokens": 2048,
             },
             timeout=60.0,

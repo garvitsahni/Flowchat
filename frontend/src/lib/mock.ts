@@ -136,6 +136,23 @@ const OUT_OF_SCOPE: QueryResponse = {
   chart_data: {},
   confidence: "high",
   confidence_note: "",
+  refusal_reason: "out_of_scope",
+  explainability: {
+    sql: "",
+    floats_used: [],
+    qc_excluded_count: 0,
+    time_range_queried: "",
+  },
+};
+
+const NO_DATA: QueryResponse = {
+  answer_text: "No data available for this region and time period.",
+  language: "en",
+  chart_type: "none",
+  chart_data: {},
+  confidence: "high",
+  confidence_note: "",
+  refusal_reason: "no_data",
   explainability: {
     sql: "",
     floats_used: [],
@@ -151,6 +168,7 @@ const RESPONSES: QueryResponse[] = [
   COMPARISON,
   SPARSE_DATA,
   OUT_OF_SCOPE,
+  NO_DATA,
 ];
 
 let cursor = 0;

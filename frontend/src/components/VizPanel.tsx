@@ -68,7 +68,28 @@ function VizInner({
     };
   }, [type]);
 
-  if (type === "none") return null;
+  if (type === "none") {
+    const reason = response.refusal_reason;
+    const title =
+      reason === "no_data"
+        ? "no data in scope"
+        : reason === "unsafe"
+          ? "couldn't answer safely"
+          : "out of scope";
+    const detail =
+      reason === "no_data"
+        ? "no measurements exist for this region and time window"
+        : reason === "unsafe"
+          ? "the generated query was rejected by the guardrail layer"
+          : "this question is outside the Indian Ocean ARGO subset";
+    return (
+      <div className="flex h-full min-h-64 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-scan-500/40 bg-abyss-900 p-6 text-center">
+        <p className="font-mono text-[11px] uppercase tracking-widest text-scan-500">{title}</p>
+        <p className="max-w-xs font-mono text-xs leading-relaxed text-foam-200/70">{detail}</p>
+      </div>
+    );
+  }
+
   if (type === "trajectory") {
     return (
       <TrajectoryMap
@@ -76,6 +97,19 @@ function VizInner({
         longitudes={data.longitudes as number[]}
         floatId={data.float_id as string}
       />
+    );
+  }
+
+  if (type === "comparison" && (data.target === null || data.baseline === null)) {
+    return (
+      <div className="flex h-full min-h-64 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-scan-500/40 bg-abyss-900 p-6 text-center">
+        <p className="font-mono text-[11px] uppercase tracking-widest text-scan-500">
+          insufficient data
+        </p>
+        <p className="max-w-xs font-mono text-xs leading-relaxed text-foam-200/70">
+          not enough measurements in this region and period to compare against a baseline
+        </p>
+      </div>
     );
   }
 

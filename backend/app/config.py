@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini-3.6-flash"
     openrouter_model: str = "openrouter/free"  # routes to least-busy free model
     nvidia_model: str = "meta/llama-3.1-8b-instruct"
-    groq_model: str = "openai/gpt-oss-120b"
+    groq_model: str = "openai/gpt-oss-20b"
 
     # Guardrail caps (ARCHITECTURE.md §2.4)
     max_rows: int = 5000

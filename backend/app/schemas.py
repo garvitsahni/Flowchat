@@ -26,7 +26,12 @@ Confidence = Literal["high", "low"]
 
 
 class QueryResponse(BaseModel):
-    """The §4 contract. Frontend builds every component against this shape."""
+    """The §4 contract. Frontend builds every component against this shape.
+
+    `refusal_reason` is additive (optional, default ""): set to "out_of_scope"
+    or "no_data" when chart_type is "none", so the frontend can render the right
+    empty state instead of a blank panel.
+    """
 
     answer_text: str
     language: Literal["en", "hi"]
@@ -34,6 +39,7 @@ class QueryResponse(BaseModel):
     chart_data: dict[str, Any] = Field(default_factory=dict)
     confidence: Confidence
     confidence_note: str = ""
+    refusal_reason: Literal["", "out_of_scope", "no_data", "unsafe"] = ""
     explainability: Explainability
 
 
