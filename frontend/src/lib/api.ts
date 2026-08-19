@@ -2,12 +2,13 @@ import type { Language, QueryResponse } from "../types";
 import { askMock } from "./mock";
 
 const USE_MOCK = (import.meta.env.VITE_USE_MOCK ?? "false") === "true";
+const API_BASE = (import.meta.env.VITE_API_BASE ?? "").replace(/\/$/, "");
 
 export async function ask(question: string, language: Language): Promise<QueryResponse> {
   if (USE_MOCK) {
     return askMock(question);
   }
-  const res = await fetch("/query", {
+  const res = await fetch(`${API_BASE}/query`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ question, language }),
