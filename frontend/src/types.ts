@@ -18,6 +18,22 @@ export interface Explainability {
 }
 
 // Chart data types matching backend viz.py
+export interface FloatPosition {
+  float_id: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface RegionMap {
+  floats: FloatPosition[];
+  bounds: {
+    min_lat: number;
+    max_lat: number;
+    min_lon: number;
+    max_lon: number;
+  };
+}
+
 export interface DepthProfileData {
   type: "depth_profile";
   depths_m: number[];
@@ -35,6 +51,7 @@ export interface DepthProfileData {
     x_axes: string[];
     y_reversed: boolean;
   };
+  map?: RegionMap | null;
 }
 
 export interface TrajectoryData {
@@ -76,6 +93,7 @@ export interface TimeSeriesData {
     y_axis: string;
     has_trend: boolean;
   };
+  map?: RegionMap | null;
 }
 
 export interface ComparisonData {
@@ -93,6 +111,7 @@ export interface ComparisonData {
     y_axis: string;
     labels: string[];
   };
+  map?: RegionMap | null;
 }
 
 export interface HeatmapTimeDepthData {
@@ -114,6 +133,7 @@ export interface HeatmapTimeDepthData {
     y_reversed: boolean;
     color_scale: string;
   };
+  map?: RegionMap | null;
 }
 
 export interface HeatmapOceanData {

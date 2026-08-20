@@ -156,7 +156,7 @@ export function ScientificChart({ response }: { response: QueryResponse }) {
         </div>
       </header>
       <div className="min-h-0 flex-1 p-2.5">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={points} margin={{ top: 8, right: 10, bottom: 0, left: 0 }} key={isRealData ? "real" : `${metric}-${scale}`}>
             <defs>
               <linearGradient id="scientificGradient" x1="0" y1="0" x2="0" y2="1">

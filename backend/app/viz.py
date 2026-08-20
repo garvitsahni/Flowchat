@@ -26,6 +26,30 @@ def _stats(values: list[float | None]) -> dict[str, float | None]:
     }
 
 
+def _map_payload(result: QueryResult) -> dict[str, Any] | None:
+    """Float positions for the region map below the chart.
+
+    Returns None when no positions are available (frontend hides the map then).
+    """
+    floats = [
+        {"float_id": f["float_id"], "latitude": f["latitude"], "longitude": f["longitude"]}
+        for f in result.float_positions
+    ]
+    if not floats:
+        return None
+    lats = [f["latitude"] for f in floats]
+    lons = [f["longitude"] for f in floats]
+    return {
+        "floats": floats,
+        "bounds": {
+            "min_lat": min(lats),
+            "max_lat": max(lats),
+            "min_lon": min(lons),
+            "max_lon": max(lons),
+        },
+    }
+
+
 def depth_profile(result: QueryResult) -> dict[str, Any]:
     rows = result.rows
     depths = [r.get("depth_m") for r in rows]
@@ -49,6 +73,7 @@ def depth_profile(result: QueryResult) -> dict[str, Any]:
             "x_axes": ["Temperature (°C)", "Salinity (PSU)"],
             "y_reversed": True,
         },
+        "map": _map_payload(result),
     }
 
 
@@ -120,6 +145,7 @@ def time_series(result: QueryResult) -> dict[str, Any]:
             "y_axis": f"{label} ({unit})",
             "has_trend": trend is not None,
         },
+        "map": _map_payload(result),
     }
 
 
@@ -142,6 +168,7 @@ def comparison(result: QueryResult) -> dict[str, Any]:
             "y_axis": "Temperature (°C)",
             "labels": ["Queried Period", "Historical Average"],
         },
+        "map": _map_payload(result),
     }
 
 
@@ -189,6 +216,7 @@ def heatmap(result: QueryResult) -> dict[str, Any]:
             "y_reversed": True,
             "color_scale": "viridis" if has_temp else "blues",
         },
+        "map": _map_payload(result),
     }
 
 

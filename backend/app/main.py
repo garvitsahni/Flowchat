@@ -321,6 +321,8 @@ async def query(req: QueryRequest) -> QueryResponse:
     if not float_ids:
         float_ids = await _floats_in_scope(result, generated)
 
+    result.float_positions = await _float_positions(result, generated)
+
     explanations = _build_explanations(
         float_ids, confidence.qc_excluded_count, generated.requested_period, req.language
     )
@@ -378,5 +380,42 @@ async def _floats_in_scope(result, generated) -> list[str]:
             params,
         )
         return [r["float_id"] for r in rows]
+    except Exception:
+        return []
+
+
+async def _float_positions(result, generated) -> list[dict]:
+    """Latest known position per float used in the answer, for the region map.
+
+    Falls back to the region's floats when the query didn't select latitude/longitude.
+    Returns [{float_id, latitude, longitude}] — real ARGO data, never fabricated.
+    """
+    try:
+        from .db import fetch_all
+
+        where = "WHERE p.float_id = ANY(%s)"
+        params: tuple = (result.float_ids,) if result.float_ids else None
+        if params is None and generated.requested_region:
+            where = "WHERE p.region = %s"
+            params = (generated.requested_region,)
+        if params is None:
+            return []
+
+        rows = await fetch_all(
+            f"""
+            SELECT DISTINCT ON (p.float_id)
+                   p.float_id, p.latitude, p.longitude
+            FROM argo_profiles p
+            {where}
+            ORDER BY p.float_id, p.profile_date DESC
+            LIMIT 20
+            """,
+            params,
+        )
+        return [
+            {"float_id": r["float_id"], "latitude": r["latitude"], "longitude": r["longitude"]}
+            for r in rows
+            if r.get("latitude") is not None and r.get("longitude") is not None
+        ]
     except Exception:
         return []

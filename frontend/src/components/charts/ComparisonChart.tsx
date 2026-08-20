@@ -45,7 +45,7 @@ export function ComparisonChart({
 
   return (
     <div className="relative h-full w-full">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height={200}>
         <BarChart data={rows} layout="vertical" margin={{ top: 8, right: 30, bottom: 4, left: 16 }}>
           <defs>
             <linearGradient id="targetGradient" x1="0" y1="0" x2="1" y2="0">

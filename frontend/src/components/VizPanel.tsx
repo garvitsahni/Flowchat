@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { FlaskConical, TriangleAlert, Waves } from "lucide-react";
-import type { QueryResponse, ChartData, DepthProfileData, TrajectoryData, TimeSeriesData, ComparisonData, HeatmapData, HeatmapOceanData } from "../types";
+import type { QueryResponse, ChartData, RegionMap, DepthProfileData, TrajectoryData, TimeSeriesData, ComparisonData, HeatmapData, HeatmapOceanData } from "../types";
 import { TrajectoryMap } from "./TrajectoryMap";
+import { FloatMap } from "./FloatMap";
 import { DepthProfileChart } from "./charts/DepthProfileChart";
 import { ComparisonChart } from "./charts/ComparisonChart";
 import { ScientificChart } from "./charts/ScientificChart";
@@ -113,7 +114,11 @@ export function VizPanel({
   }
 
   if (isTimeSeries(data)) {
-    return <ScientificChart key={response as unknown as string} response={response} />;
+    return (
+      <ChartWithMap map={data.map ?? undefined} region={data.region}>
+        <ScientificChart key={response as unknown as string} response={response} />
+      </ChartWithMap>
+    );
   }
 
   if (isHeatmap(data)) {
@@ -125,7 +130,9 @@ export function VizPanel({
     const subtitle = `${data.region ?? ""}${data.period ? ` · ${data.period}` : ""}`;
     return (
       <ChartShell title={title} subtitle={subtitle}>
-        <HeatmapChart data={data.grid} />
+        <ChartWithMap map={data.map ?? undefined} region={data.region}>
+          <HeatmapChart data={data.grid} />
+        </ChartWithMap>
       </ChartShell>
     );
   }
@@ -135,7 +142,9 @@ export function VizPanel({
     const subtitle = `${data.region ?? ""}${data.period ? ` · ${data.period}` : ""}`;
     return (
       <ChartShell title={title} subtitle={subtitle}>
-        <DepthProfileChart data={data} />
+        <ChartWithMap map={data.map ?? undefined} region={data.region}>
+          <DepthProfileChart data={data} />
+        </ChartWithMap>
       </ChartShell>
     );
   }
@@ -145,16 +154,38 @@ export function VizPanel({
     const subtitle = `${data.region ?? ""}${data.period ? ` · ${data.period}` : ""}`;
     return (
       <ChartShell title={title} subtitle={subtitle}>
-        <ComparisonChart
-          target={data.target as number}
-          baseline={data.baseline as number}
-          labels={data.meta?.labels as [string, string] | undefined}
-        />
+        <ChartWithMap map={data.map ?? undefined} region={data.region}>
+          <ComparisonChart
+            target={data.target as number}
+            baseline={data.baseline as number}
+            labels={data.meta?.labels as [string, string] | undefined}
+          />
+        </ChartWithMap>
       </ChartShell>
     );
   }
 
   return null;
+}
+
+function ChartWithMap({
+  map,
+  region,
+  children,
+}: {
+  map?: RegionMap | null;
+  region?: string;
+  children: ReactNode;
+}) {
+  if (!map || !map.floats.length) return <>{children}</>;
+  return (
+    <div className="flex h-full min-h-0 flex-col gap-2.5">
+      <div className="min-h-0 flex-1">{children}</div>
+      <div className="h-[160px] shrink-0">
+        <FloatMap map={map} region={region} />
+      </div>
+    </div>
+  );
 }
 
 function ChartShell({

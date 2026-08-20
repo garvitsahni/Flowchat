@@ -29,6 +29,7 @@ class QueryResult:
     period: str = ""
     float_ids: list[str] = field(default_factory=list)
     qc_excluded_count: int = 0
+    float_positions: list[dict] = field(default_factory=list)  # [{float_id, latitude, longitude}]
 
 
 class LLMProvider(Protocol):
