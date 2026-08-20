@@ -31,7 +31,7 @@
 - Consumes: `backend/pipeline/download.py` → `download_float(float_id: str, dac: str = "incois", force: bool = False) -> list[Path]`; `backend/pipeline/ingest.py` → `ingest_float(float_id: str, dac: str = "incois", clean: bool = False) -> dict`; `backend/pipeline/precompute.py` → `precompute() -> dict`.
 - Produces: `data/float_manifest.csv` (columns `float_id,dac,region`); `backend/pipeline/ingest_many.py` with `main()` running download→ingest→precompute per manifest row.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Uses stdlib `unittest` (pytest is not installed in `backend/.venv`; do not add it).
 
@@ -81,12 +81,12 @@ if __name__ == "__main__":
     unittest.main()
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd C:\Users\Garvi\Desktop\Projects\FloatChat && $env:PYTHONPATH="C:\Users\Garvi\Desktop\Projects\FloatChat\backend\app"; & "C:\Users\Garvi\Desktop\Projects\FloatChat\backend\.venv\Scripts\python.exe" backend\pipeline\test_ingest_many.py`
 Expected: FAIL — `ModuleNotFoundError: No module named 'ingest_many'` / `MANIFEST_PATH` undefined.
 
-- [ ] **Step 3: Create the manifest**
+- [x] **Step 3: Create the manifest**
 
 Create `data/float_manifest.csv` verbatim:
 
@@ -109,7 +109,7 @@ float_id,dac,region
 2902612,csio,Andaman Sea
 ```
 
-- [ ] **Step 4: Write `backend/pipeline/ingest_many.py`**
+- [x] **Step 4: Write `backend/pipeline/ingest_many.py`**
 
 ```python
 """Batch-ingest the float manifest into Postgres.
@@ -224,12 +224,12 @@ if __name__ == "__main__":
 
 > **Import note:** pipeline scripts import `from config import settings`, and `config.py` lives at `backend/app/config.py`. They must be run with `PYTHONPATH=backend/app` and **as scripts** (not `-m pipeline.*`), e.g. from repo root: `PYTHONPATH=backend/app python backend/pipeline/ingest_many.py`. Running as a script puts `backend/pipeline/` on `sys.path` so `ingest_many.py`'s `from download import ...` / `from ingest import ...` / `from precompute import ...` resolve, while `PYTHONPATH=backend/app` makes `from config import settings` resolve. The test file runs the same way (script invocation adds `backend/pipeline/` to the path).
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `cd C:\Users\Garvi\Desktop\Projects\FloatChat && $env:PYTHONPATH="C:\Users\Garvi\Desktop\Projects\FloatChat\backend\app"; & "C:\Users\Garvi\Desktop\Projects\FloatChat\backend\.venv\Scripts\python.exe" backend\pipeline\test_ingest_many.py`
 Expected: 4 tests OK, e.g. `Ran 4 tests ... OK`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add data/float_manifest.csv backend/pipeline/ingest_many.py backend/pipeline/test_ingest_many.py
@@ -247,12 +247,12 @@ git commit -m "data: add float manifest + batch ingest driver"
 - Consumes: `ingest_manifest()` from Task 1.
 - Produces: live DB rows in `argo_floats`, `argo_profiles`, `argo_measurements`, plus rebuilt `qc_stats` and `regional_monthly_avg`.
 
-- [ ] **Step 1: Run the full ingestion**
+- [x] **Step 1: Run the full ingestion**
 
 Run: `cd C:\Users\Garvi\Desktop\Projects\FloatChat && $env:PYTHONPATH="C:\Users\Garvi\Desktop\Projects\FloatChat\backend\app"; & "C:\Users\Garvi\Desktop\Projects\FloatChat\backend\.venv\Scripts\python.exe" backend\pipeline\ingest_many.py`
 Expected: per-float `[ok]` lines with real profile/measurement/excluded counts, then a `summary:` line with `succeeded >= 15` (14 new + 1 existing re-ingest) and `failed: 0`. Any `[fail]` lines must be investigated, not ignored.
 
-- [ ] **Step 2: Show before/after DB counts**
+- [x] **Step 2: Show before/after DB counts**
 
 Run (via pipeline owner role):
 ```powershell
@@ -274,7 +274,7 @@ conn.close()
 ```
 Expected: `argo_floats` = 15; each of the 3 regions has a non-zero profile/measurement count.
 
-- [ ] **Step 3: Commit (if the run surfaced any code fixes)**
+- [x] **Step 3: Commit (if the run surfaced any code fixes)**
 
 If Task 2 required edits to `ingest_many.py`, commit them: `git add -A && git commit -m "data: fix batch ingest during expansion run"`. Otherwise skip — no commit for a data-only run (NetCDF files are gitignored).
 
@@ -289,12 +289,12 @@ If Task 2 required edits to `ingest_many.py`, commit them: `git add -A && git co
 - Consumes: the expanded DB from Task 2 + the running FastAPI backend on `127.0.0.1:8000`.
 - Produces: raw `/query` responses proving regional coverage.
 
-- [ ] **Step 1: Confirm backend health**
+- [x] **Step 1: Confirm backend health**
 
 Run: `Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8000/health"`
 Expected: `status = ok`, `db_connected = true`.
 
-- [ ] **Step 2: Query all 3 regions**
+- [x] **Step 2: Query all 3 regions**
 
 Run:
 ```powershell
@@ -311,12 +311,12 @@ foreach ($q in $queries) {
 ```
 Expected: each region returns a non-`none` chart_type, empty `refusal_reason`, a real `answer_text`, and non-empty SQL. Also verify a previously-refused query now answers, e.g. `"what's the average temperature in the Arabian Sea last year"` returns real data (not `no_data`).
 
-- [ ] **Step 3: Confirm comparison confidence improves**
+- [x] **Step 3: Confirm comparison confidence improves**
 
 Run: `POST /query` with `{"question":"what's the average temperature in the Bay of Bengal in 2023","language":"en"}` and inspect `confidence` + the `explainability` block (float count should now be >= 3, vs 1 before).
 Expected: confidence not solely driven by single-float coverage; explainability shows multiple floats.
 
-- [ ] **Step 4: No commit needed**
+- [x] **Step 4: No commit needed**
 
 This task changes no code; nothing to commit.
 
@@ -331,7 +331,7 @@ This task changes no code; nothing to commit.
 - Consumes: expanded DB from Task 2.
 - Produces: updated `data/floatchat_data.sql` matching the expanded dataset (LOAD_ORDER.md hosted path).
 
-- [ ] **Step 1: Re-export the data dump**
+- [x] **Step 1: Re-export the data dump**
 
 Run:
 ```powershell
@@ -340,17 +340,23 @@ $env:PGPASSWORD = "floatchat_dev"
 ```
 Expected: command exits 0; `floatchat_data.sql` size grows well beyond its previous single-float size; `SELECT COUNT(*) FROM argo_floats` in the dump is 15.
 
-- [ ] **Step 2: Spot-check the dump**
+- [x] **Step 2: Spot-check the dump**
 
 Run: `Select-String -Path "C:\Users\Garvi\Desktop\Projects\FloatChat\data\floatchat_data.sql" -Pattern "6903062|2902264|2902702" | Select-Object -First 3`
 Expected: at least one line mentioning each new float ID (confirming they made it into the dump).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add data/floatchat_data.sql
 git commit -m "data: regenerate dump with 15-float expansion"
 ```
+
+> **Divergence (user decision, commit `ef71a18`):** the regenerated dump is **not
+> committed** — `data/floatchat_data.sql` was added to `.gitignore` (407 MB was too large
+> to version). The dump is re-exported locally via pg_dump (147 MB after the idempotency
+> dedupe) and lives only on disk for the LOAD_ORDER.md hosted path. The original rule was
+> written UTF-16LE and never matched; encoding was fixed in `876ebb2`.
 
 ---
 
@@ -362,21 +368,30 @@ git commit -m "data: regenerate dump with 15-float expansion"
 **Interfaces:**
 - Consumes: everything from Tasks 1-4.
 
-- [ ] **Step 1: Re-run the manifest tests**
+- [x] **Step 1: Re-run the manifest tests**
 
 Run: `cd C:\Users\Garvi\Desktop\Projects\FloatChat && $env:PYTHONPATH="C:\Users\Garvi\Desktop\Projects\FloatChat\backend\app"; & "C:\Users\Garvi\Desktop\Projects\FloatChat\backend\.venv\Scripts\python.exe" backend\pipeline\test_ingest_many.py`
 Expected: 4 tests OK (e.g. `Ran 4 tests ... OK`).
 
-- [ ] **Step 2: Verify idempotency**
+- [x] **Step 2: Verify idempotency**
 
 Run: `cd C:\Users\Garvi\Desktop\Projects\FloatChat && $env:PYTHONPATH="C:\Users\Garvi\Desktop\Projects\FloatChat\backend\app"; & "C:\Users\Garvi\Desktop\Projects\FloatChat\backend\.venv\Scripts\python.exe" backend\pipeline\ingest_many.py`
-Expected: second run is effectively a no-op — all floats `[ok]` with the same counts as Task 2 (idempotent via `ON CONFLICT DO NOTHING`), `succeeded: 15`, `failed: 0`, exit 0.
+Expected: second run is effectively a no-op — all floats `[ok]` with the same counts as Task 2, `succeeded: 15`, `failed: 0`, exit 0.
 
-- [ ] **Step 3: Confirm no accidental scope changes**
+> **Divergence (bug found during this step, fixed in `876ebb2`):** the plan's "idempotent
+> via `ON CONFLICT DO NOTHING`" assumption was wrong — `argo_profiles` had no unique
+> constraint (only the serial PK), so the conflict clause never fired, and
+> `argo_measurements` had no conflict handling at all. Re-runs appended duplicate profiles
+> + measurements. Fixed by adding `UNIQUE (float_id, cycle_number)` to profiles (all schema
+> sources + SCHEMA_AND_PROMPTS.md) and delete-then-insert for measurements (no value key is
+> safe — Argo profiles legitimately repeat pressure levels). Live DB deduped; idempotency
+> proven: two consecutive runs both yield exactly 5,165 profiles / 1,951,900 measurements.
+
+- [x] **Step 3: Confirm no accidental scope changes**
 
 Run: `git status --short`
 Expected: only expected files changed (manifest, ingest_many.py, test, data dump). No changes to `frontend/`, `backend/app/`, `SCHEMA_AND_PROMPTS.md`, or schema files.
 
-- [ ] **Step 4: Log the run in the SDD ledger**
+- [x] **Step 4: Log the run in the SDD ledger**
 
 Append a dated entry to `.superpowers/sdd/2026-08-20-dataset-expansion/progress.md` summarizing the 15 floats, before/after counts, API verification results, and any failures encountered.
