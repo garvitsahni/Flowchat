@@ -1,6 +1,6 @@
 # Instrument Panel Redesign Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Rebuild the FloatChat main interface into a premium deep-sea instrument control panel / scientific oceanographic research workstation (seeded example conversation, structured answer/evidence/data-context, scientific recharts chart with crosshair tooltip + working metric/scale/export controls).
 
@@ -73,7 +73,7 @@ Dev server (detached, log `frontend/dev5199.log`): `Start-Process cmd.exe -Argum
 **Interfaces:**
 - Produces: `DemoMetric`, `DemoScale`, `DemoPoint`, `DEMO_METRICS`, `getRegionContext`, `exportCsv` — consumed by Tasks 2, 5, 6, 7.
 
-- [ ] **Step 1:** Create `frontend/src/lib/demo.ts` with this exact content:
+- [x] **Step 1:** Create `frontend/src/lib/demo.ts` with this exact content:
 
 ```ts
 // MOCK: illustrative demo series for UI demonstration only.
@@ -203,12 +203,12 @@ export function exportCsv(metric: DemoMetric, scale: DemoScale): string {
 }
 ```
 
-- [ ] **Step 2:** Modify `frontend/src/lib/mock.ts`: add `export` to the `TIME_SERIES` const, and change its `answer_text` to:
+- [x] **Step 2:** Modify `frontend/src/lib/mock.ts`: add `export` to the `TIME_SERIES` const, and change its `answer_text` to:
   `"Temperature in Bay of Bengal rose from 20.7\u00B0C (2003-01) to 27.4\u00B0C (2003-08)."` (drop the trailing " Limited float coverage." — that context moved to the ConfidenceBadge note).
 
-- [ ] **Step 3:** Verify: `npm run build` from `frontend/` — must pass tsc + vite clean.
+- [x] **Step 3:** Verify: `npm run build` from `frontend/` — must pass tsc + vite clean.
 
-- [ ] **Step 4:** Commit: `git add frontend/src/lib/demo.ts frontend/src/lib/mock.ts` then `git commit -m "fe: add demo dataset and csv export"`
+- [x] **Step 4:** Commit: `git add frontend/src/lib/demo.ts frontend/src/lib/mock.ts` then `git commit -m "fe: add demo dataset and csv export"`
 ### Task 2: Chat presentational components
 
 **Files:**
@@ -218,7 +218,7 @@ export function exportCsv(metric: DemoMetric, scale: DemoScale): string {
 - Consumes: `getRegionContext` from `lib/demo.ts` (Task 1), `QueryResponse`/`Confidence`/`Explainability` from `types.ts`, `cn` from `lib/utils.ts`.
 - Produces: `Message` type + `ChatMessage` (consumed by Task 6); `AnswerCard`, `DataContext`, `RelatedQueries`, `ConfidenceBadge`, `DataQuality`, `EvidencePanel` (consumed by Task 6).
 
-- [ ] **Step 1:** Create `frontend/src/components/chat/DataQuality.tsx`:
+- [x] **Step 1:** Create `frontend/src/components/chat/DataQuality.tsx`:
 
 ```tsx
 import { cn } from "../../lib/utils";
@@ -246,7 +246,7 @@ export function DataQuality({ level }: { level: "high" | "medium" | "low" }) {
 }
 ```
 
-- [ ] **Step 2:** Create `frontend/src/components/chat/ConfidenceBadge.tsx`:
+- [x] **Step 2:** Create `frontend/src/components/chat/ConfidenceBadge.tsx`:
 
 ```tsx
 import type { Confidence } from "../../types";
@@ -273,7 +273,7 @@ export function ConfidenceBadge({ confidence, note }: { confidence: Confidence; 
 }
 ```
 
-- [ ] **Step 3:** Create `frontend/src/components/chat/EvidencePanel.tsx`:
+- [x] **Step 3:** Create `frontend/src/components/chat/EvidencePanel.tsx`:
 
 ```tsx
 import { useState } from "react";
@@ -348,7 +348,7 @@ export function EvidencePanel({
 }
 ```
 
-- [ ] **Step 4:** Create `frontend/src/components/chat/DataContext.tsx`:
+- [x] **Step 4:** Create `frontend/src/components/chat/DataContext.tsx`:
 
 ```tsx
 function Block({ k, v }: { k: string; v: string }) {
@@ -390,7 +390,7 @@ export function DataContext({
 }
 ```
 
-- [ ] **Step 5:** Create `frontend/src/components/chat/RelatedQueries.tsx`:
+- [x] **Step 5:** Create `frontend/src/components/chat/RelatedQueries.tsx`:
 
 ```tsx
 const QUERIES = [
@@ -429,7 +429,7 @@ export function RelatedQueries({
 }
 ```
 
-- [ ] **Step 6:** Create `frontend/src/components/chat/AnswerCard.tsx`:
+- [x] **Step 6:** Create `frontend/src/components/chat/AnswerCard.tsx`:
 
 ```tsx
 import type { QueryResponse } from "../../types";
@@ -493,7 +493,7 @@ export function AnswerCard({ text, response }: { text: string; response: QueryRe
 }
 ```
 
-- [ ] **Step 7:** Create `frontend/src/components/chat/ChatMessage.tsx` (defines the shared `Message` type):
+- [x] **Step 7:** Create `frontend/src/components/chat/ChatMessage.tsx` (defines the shared `Message` type):
 
 ```tsx
 import { motion } from "framer-motion";
@@ -549,9 +549,9 @@ export function ChatMessage({ message }: { message: Message }) {
 }
 ```
 
-- [ ] **Step 8:** Verify: `npm run build` from `frontend/` — must pass clean (no imports wired yet, so nothing references these; tsc still typechecks the new files).
+- [x] **Step 8:** Verify: `npm run build` from `frontend/` — must pass clean (no imports wired yet, so nothing references these; tsc still typechecks the new files).
 
-- [ ] **Step 9:** Commit: `git add frontend/src/components/chat` then `git commit -m "fe: add chat answer, evidence, data-context components"`
+- [x] **Step 9:** Commit: `git add frontend/src/components/chat` then `git commit -m "fe: add chat answer, evidence, data-context components"`
 ### Task 3: Command input
 
 **Files:**
@@ -560,7 +560,7 @@ export function ChatMessage({ message }: { message: Message }) {
 **Interfaces:**
 - Produces: `CommandInput({ onSubmit, disabled })` — consumed by Task 6.
 
-- [ ] **Step 1:** Create `frontend/src/components/chat/CommandInput.tsx`:
+- [x] **Step 1:** Create `frontend/src/components/chat/CommandInput.tsx`:
 
 ```tsx
 import { useState } from "react";
@@ -614,9 +614,9 @@ export function CommandInput({
 }
 ```
 
-- [ ] **Step 2:** Verify: `npm run build` from `frontend/` — must pass clean.
+- [x] **Step 2:** Verify: `npm run build` from `frontend/` — must pass clean.
 
-- [ ] **Step 3:** Commit: `git add frontend/src/components/chat/CommandInput.tsx` then `git commit -m "fe: add command-style query input"`
+- [x] **Step 3:** Commit: `git add frontend/src/components/chat/CommandInput.tsx` then `git commit -m "fe: add command-style query input"`
 
 ### Task 4: Instrument header
 
@@ -628,7 +628,7 @@ export function CommandInput({
 - Consumes: `LanguageToggle` (existing), `Tooltip`/`TooltipContent`/`TooltipTrigger` (`@/components/ui/tooltip`), `Language` type.
 - Produces: `Header({ language, onLanguageChange, floatId, profileCount, region })` — consumed by Task 8.
 
-- [ ] **Step 1:** Create `frontend/src/components/Header.tsx`:
+- [x] **Step 1:** Create `frontend/src/components/Header.tsx`:
 
 ```tsx
 import { useState } from "react";
@@ -713,7 +713,7 @@ export function Header({
 }
 ```
 
-- [ ] **Step 2:** Restyle `frontend/src/components/ui/segmented-control.tsx` to match the instrument look (keep the spring thumb, make it square and border-based):
+- [x] **Step 2:** Restyle `frontend/src/components/ui/segmented-control.tsx` to match the instrument look (keep the spring thumb, make it square and border-based):
 
 ```tsx
 import { motion } from "framer-motion";
@@ -785,9 +785,9 @@ export function SegmentedControl({
 }
 ```
 
-- [ ] **Step 3:** Verify: `npm run build` from `frontend/` — must pass clean.
+- [x] **Step 3:** Verify: `npm run build` from `frontend/` — must pass clean.
 
-- [ ] **Step 4:** Commit: `git add frontend/src/components/Header.tsx frontend/src/components/ui/segmented-control.tsx` then `git commit -m "fe: add compact instrument header with settings popover"`
+- [x] **Step 4:** Commit: `git add frontend/src/components/Header.tsx frontend/src/components/ui/segmented-control.tsx` then `git commit -m "fe: add compact instrument header with settings popover"`
 ### Task 5: Scientific chart + chart controls
 
 **Files:**
@@ -797,7 +797,7 @@ export function SegmentedControl({
 - Consumes: `DEMO_METRICS`, `DemoMetric`, `DemoScale`, `exportCsv` from `lib/demo.ts` (Task 1); `QueryResponse` from `types.ts`; `DataQuality` from `components/chat/DataQuality` (Task 2); `toast` from `sonner`.
 - Produces: `ScientificChart({ response })` and `ChartControls({ metric, onMetricChange, scale, onScaleChange, onExport })` — consumed by Task 7.
 
-- [ ] **Step 1:** Create `frontend/src/components/charts/ChartControls.tsx`:
+- [x] **Step 1:** Create `frontend/src/components/charts/ChartControls.tsx`:
 
 ```tsx
 import { Download } from "lucide-react";
@@ -883,7 +883,7 @@ export function ChartControls({
 }
 ```
 
-- [ ] **Step 2:** Create `frontend/src/components/charts/ScientificChart.tsx`:
+- [x] **Step 2:** Create `frontend/src/components/charts/ScientificChart.tsx`:
 
 ```tsx
 import { useState } from "react";
@@ -1039,9 +1039,9 @@ export function ScientificChart({ response }: { response: QueryResponse }) {
 }
 ```
 
-- [ ] **Step 3:** Verify: `npm run build` from `frontend/` — must pass clean (tsc catches the `React.ReactNode` reference in ChartControls via `@types/react` global; if it errors, add `import type { ReactNode } from "react"` and use `ReactNode`).
+- [x] **Step 3:** Verify: `npm run build` from `frontend/` — must pass clean (tsc catches the `React.ReactNode` reference in ChartControls via `@types/react` global; if it errors, add `import type { ReactNode } from "react"` and use `ReactNode`).
 
-- [ ] **Step 4:** Commit: `git add frontend/src/components/charts/ScientificChart.tsx frontend/src/components/charts/ChartControls.tsx` then `git commit -m "fe: add scientific chart with crosshair tooltip and controls"`
+- [x] **Step 4:** Commit: `git add frontend/src/components/charts/ScientificChart.tsx frontend/src/components/charts/ChartControls.tsx` then `git commit -m "fe: add scientific chart with crosshair tooltip and controls"`
 ### Task 6: Rework ChatPanel with seeded conversation
 
 **Files:**
@@ -1052,7 +1052,7 @@ export function ScientificChart({ response }: { response: QueryResponse }) {
 - Consumes: `Message`/`ChatMessage` (Task 2), `CommandInput` (Task 3), `RelatedQueries` (Task 2), `TIME_SERIES` from `lib/mock.ts` (Task 1), `ask` from `lib/api.ts`, `TypingIndicator` from `@/components/ui/typing-indicator`.
 - Produces: `ChatPanel({ language, busy, onBusyChange, onVizChange })` — same props as today; consumed by Task 8.
 
-- [ ] **Step 1:** Replace `frontend/src/components/chat/ChatMessage.tsx` with the version below (adds `onRelated` and renders `RelatedQueries` under the answer):
+- [x] **Step 1:** Replace `frontend/src/components/chat/ChatMessage.tsx` with the version below (adds `onRelated` and renders `RelatedQueries` under the answer):
 
 ```tsx
 import { motion } from "framer-motion";
@@ -1118,7 +1118,7 @@ export function ChatMessage({
 }
 ```
 
-- [ ] **Step 2:** Replace `frontend/src/components/ChatPanel.tsx` with the version below (seeded conversation, new message rendering, CommandInput):
+- [x] **Step 2:** Replace `frontend/src/components/ChatPanel.tsx` with the version below (seeded conversation, new message rendering, CommandInput):
 
 ```tsx
 import { useEffect, useRef, useState } from "react";
@@ -1204,11 +1204,11 @@ export function ChatPanel({
 }
 ```
 
-- [ ] **Step 3:** Delete `frontend/src/components/ConfidenceBadge.tsx` and `frontend/src/components/ExplainabilityDrawer.tsx` (superseded by `components/chat/*`; ChatPanel no longer imports them).
+- [x] **Step 3:** Delete `frontend/src/components/ConfidenceBadge.tsx` and `frontend/src/components/ExplainabilityDrawer.tsx` (superseded by `components/chat/*`; ChatPanel no longer imports them).
 
-- [ ] **Step 4:** Verify: `npm run build` from `frontend/` — must pass clean. This will fail if anything still imports the deleted files; fix those imports (none expected).
+- [x] **Step 4:** Verify: `npm run build` from `frontend/` — must pass clean. This will fail if anything still imports the deleted files; fix those imports (none expected).
 
-- [ ] **Step 5:** Commit: `git add -A` then `git commit -m "fe: rework chat panel with seeded conversation and structured answer"`
+- [x] **Step 5:** Commit: `git add -A` then `git commit -m "fe: rework chat panel with seeded conversation and structured answer"`
 ### Task 7: Rework VizPanel to scientific chart
 
 **Files:**
@@ -1218,7 +1218,7 @@ export function ChatPanel({
 - Consumes: `ScientificChart` (Task 5), `QueryResponse`, `TrajectoryMap`, `DepthProfileChart`, `ComparisonChart`, `Skeleton`; `ReactNode` from `react`.
 - Produces: `VizPanel({ response, loading })` — same props as today; consumed by Task 8.
 
-- [ ] **Step 1:** Replace `frontend/src/components/VizPanel.tsx` with the version below (removes MagicCard/BorderBeam/BlurFade; adds chart shell + ScientificChart):
+- [x] **Step 1:** Replace `frontend/src/components/VizPanel.tsx` with the version below (removes MagicCard/BorderBeam/BlurFade; adds chart shell + ScientificChart):
 
 ```tsx
 import type { ReactNode } from "react";
@@ -1389,9 +1389,9 @@ function StateCard({
 }
 ```
 
-- [ ] **Step 2:** Verify: `npm run build` from `frontend/` — must pass clean.
+- [x] **Step 2:** Verify: `npm run build` from `frontend/` — must pass clean.
 
-- [ ] **Step 3:** Commit: `git add frontend/src/components/VizPanel.tsx` then `git commit -m "fe: rework viz panel to scientific chart workspace"`
+- [x] **Step 3:** Commit: `git add frontend/src/components/VizPanel.tsx` then `git commit -m "fe: rework viz panel to scientific chart workspace"`
 
 ### Task 8: Rework App layout
 
@@ -1402,7 +1402,7 @@ function StateCard({
 - Consumes: `Header` (Task 4), `ChatPanel`/`VizPanel` (Tasks 6/7), `TIME_SERIES` from `lib/mock.ts`, `TooltipProvider`/`Toaster`.
 - Produces: the new main route — two-column 48/52 workspace, seeded viz, no demo routes.
 
-- [ ] **Step 1:** Replace `frontend/src/App.tsx` with the version below (removes AuroraBackground/Particles/Marquee/NumberTicker/DemoHub/PromptInputDemo, adds Header + subtle vignette + seeded viz):
+- [x] **Step 1:** Replace `frontend/src/App.tsx` with the version below (removes AuroraBackground/Particles/Marquee/NumberTicker/DemoHub/PromptInputDemo, adds Header + subtle vignette + seeded viz):
 
 ```tsx
 import { useState } from "react";
@@ -1455,13 +1455,13 @@ export default function App() {
 }
 ```
 
-- [ ] **Step 2:** Modify `frontend/src/index.css`: set `--background` to `0 0% 3%` (was 4%). Keep `sonar-pulse` keyframes. No other token changes required (panels use the spec hexes directly in components).
+- [x] **Step 2:** Modify `frontend/src/index.css`: set `--background` to `0 0% 3%` (was 4%). Keep `sonar-pulse` keyframes. No other token changes required (panels use the spec hexes directly in components).
 
-- [ ] **Step 3:** Verify: `npm run build` from `frontend/` — must pass clean (will fail if deleted files are still imported; fix if so).
+- [x] **Step 3:** Verify: `npm run build` from `frontend/` — must pass clean (will fail if deleted files are still imported; fix if so).
 
-- [ ] **Step 4:** Start the dev server on 5199 (see Verification section) and run the headless DOM dump against `http://localhost:5199/`. Expected markers present: `Deep-Sea Instrument Panel`, `LIVE`, `float 2900226`, the seeded question text, `Low confidence`, `Data Context`, `Related Queries`, `Monthly Mean`, `8 observations`, `Temperature`, `Salinity`, `Pressure`, `Oxygen`, `Export`. No `There was an error` in the console output.
+- [x] **Step 4:** Start the dev server on 5199 (see Verification section) and run the headless DOM dump against `http://localhost:5199/`. Expected markers present: `Deep-Sea Instrument Panel`, `LIVE`, `float 2900226`, the seeded question text, `Low confidence`, `Data Context`, `Related Queries`, `Monthly Mean`, `8 observations`, `Temperature`, `Salinity`, `Pressure`, `Oxygen`, `Export`. No `There was an error` in the console output.
 
-- [ ] **Step 5:** Commit: `git add -A` then `git commit -m "fe: rework app layout to instrument workspace"`
+- [x] **Step 5:** Commit: `git add -A` then `git commit -m "fe: rework app layout to instrument workspace"`
 ### Task 9: Clean up dead demo files + tailwind
 
 **Files:**
@@ -1469,23 +1469,23 @@ export default function App() {
 - Modify: `frontend/tailwind.config.js` (remove `marquee` + `marquee-vertical` keyframes and their `animation` entries)
 - Keep (still referenced): `LanguageToggle.tsx`, `ui/segmented-control.tsx`, `ui/typing-indicator.tsx`, `ui/skeleton.tsx`, `ui/sonner.tsx`, `ui/tabs.tsx`, `ui/tooltip.tsx`, `charts/ChartTooltip.tsx` (NOTE: still imported by the kept `DepthProfileChart` + `ComparisonChart`, both rendered by the new VizPanel — do NOT delete)
 
-- [ ] **Step 1:** `Remove-Item` the 11 files/dirs listed above (also `frontend/src/components/ConfidenceBadge.tsx` + `ExplainabilityDrawer.tsx` if Task 6 step 3 hasn't run yet — it has, they're already gone).
-- [ ] **Step 2:** In `frontend/tailwind.config.js` delete the `marquee`/`marquee-vertical` keyframes block (currently lines ~70-79) and the `marquee`/`marquee-vertical` animation entries (lines ~82-83). Leave `accordion-down`/`accordion-up` untouched.
-- [ ] **Step 3:** Grep for stale imports before building:
-  `rg -n "marquee|particles|aurora-background|blur-fade|border-beam|magic-card|number-ticker|ai-chat-input|StockChart|TimeSeriesChart|ChartTooltip|DemoHub|PromptInputDemo" frontend/src` — expect **zero matches** (aside from inside any remaining comments; none expected).
-- [ ] **Step 4:** Verify: `npm run build` from `frontend/` — must pass clean.
-- [ ] **Step 5:** Commit: `git add -A` then `git commit -m "fe: remove demo scaffolding and unused ui primitives"`
+- [x] **Step 1:** `Remove-Item` the 11 files/dirs listed above (also `frontend/src/components/ConfidenceBadge.tsx` + `ExplainabilityDrawer.tsx` if Task 6 step 3 hasn't run yet — it has, they're already gone).
+- [x] **Step 2:** In `frontend/tailwind.config.js` delete the `marquee`/`marquee-vertical` keyframes block (currently lines ~70-79) and the `marquee`/`marquee-vertical` animation entries (lines ~82-83). Leave `accordion-down`/`accordion-up` untouched.
+- [x] **Step 3:** Grep for stale imports before building:
+  `rg -n "marquee|particles|aurora-background|blur-fade|border-beam|magic-card|number-ticker|ai-chat-input|StockChart|TimeSeriesChart|DemoHub|PromptInputDemo|StockChartDemo" frontend/src` — expect **zero matches** (aside from inside any remaining comments; none expected). NOTE: `ChartTooltip` is intentionally excluded — it is kept and imported by the surviving `DepthProfileChart`/`ComparisonChart`.
+- [x] **Step 4:** Verify: `npm run build` from `frontend/` — must pass clean.
+- [x] **Step 5:** Commit: `git add -A` then `git commit -m "fe: remove demo scaffolding and unused ui primitives"`
 
 ### Task 10: Final verification
 
-- [ ] **Step 1:** Full build: `npm run build` from `frontend/` — clean.
-- [ ] **Step 2:** Start a fresh dev server on 5199 (kill any stale process first, then run detached as in the Verification section, log to `dev5199.log`).
-- [ ] **Step 3:** Headless DOM dump against `http://localhost:5199/`. Assert the full instrument panel renders with **no `There was an error`** and no React error boundary text. Expected markers (grep the dump):
+- [x] **Step 1:** Full build: `npm run build` from `frontend/` — clean.
+- [x] **Step 2:** Start a fresh dev server on 5199 (kill any stale process first, then run detached as in the Verification section, log to `dev5199.log`).
+- [x] **Step 3:** Headless DOM dump against `http://localhost:5199/`. Assert the full instrument panel renders with **no `There was an error`** and no React error boundary text. Expected markers (grep the dump):
   - Header: `Deep-Sea Instrument Panel`, `LIVE`, `float 2900226`
   - Seeded conversation: the seeded question text, `Low confidence`, `Data Context`, `Related Queries`
   - Chart: `Monthly Mean`, `8 observations`, `Bay of Bengal`, metric buttons `Temperature` `Salinity` `Pressure` `Oxygen`, `Export`
   - Values: `20.7`, `27.4`, `2003-08`
-- [ ] **Step 4:** Manual interaction checklist (browser):
+- [x] **Step 4:** Manual interaction checklist (browser):
   - Expand `How I got this` — shows SQL + floats; refresh keeps it collapsed.
   - Hover the chart → crosshair + tooltip rows (Observations / Quality).
   - Switch metric (Salinity) and scale (Yearly); chart remounts + re-animates; Y ticks change (e.g. `2002` `2003` `2004`).
@@ -1494,8 +1494,8 @@ export default function App() {
   - EN/HI toggle in header; settings popover opens.
   - Resize to mobile width → single column, order: chat → chart → input.
   - Language toggle still works after the segmented-control restyle.
-- [ ] **Step 5:** Fix anything found; re-run build + dump. 
-- [ ] **Step 6:** Commit: `git add -A` then `git commit -m "fe: polish instrument panel verification pass"` (only if fixes were needed).
+- [x] **Step 5:** Fix anything found; re-run build + dump. 
+- [x] **Step 6:** Commit: `git add -A` then `git commit -m "fe: polish instrument panel verification pass"` (only if fixes were needed).
 
 ---
 
