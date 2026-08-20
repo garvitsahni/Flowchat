@@ -321,6 +321,9 @@ async def query(req: QueryRequest) -> QueryResponse:
     if not float_ids:
         float_ids = await _floats_in_scope(result, generated)
 
+    # Sync resolved floats back so viz/_float_positions can attribute the map.
+    result.float_ids = float_ids
+
     result.float_positions = await _float_positions(result, generated)
 
     explanations = _build_explanations(
