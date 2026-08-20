@@ -144,24 +144,28 @@ class MockProvider:
     # ------------------------------------------------------------- intent tests
 
     def _is_out_of_scope(self, q: str) -> bool:
-        return any(t in q for t in OUT_OF_SCOPE)
+        ql = q.lower()
+        return any(t in ql for t in OUT_OF_SCOPE)
 
     def _asks_unsupported_param(self, q: str) -> str | None:
         """Return the unsupported parameter name if the question asks for one."""
+        ql = q.lower()
         for param in UNSUPPORTED_PARAMS:
-            if param in q:
+            if param in ql:
                 return param.strip()
         return None
 
     def _is_trajectory(self, q: str) -> bool:
-        return any(t in q for t in [
+        ql = q.lower()
+        return any(t in ql for t in [
             "trajectory", "path", "track", "route", "travel", "moved",
             "where did", "where has", "traveled", "travelled",
         ])
 
     def _is_comparison(self, q: str) -> bool:
+        ql = q.lower()
         return any(
-            t in q
+            t in ql
             for t in [
                 "compare", "comparison", "vs", "versus", "unusually", "warmer than",
                 "colder than", "anomaly", "anomalous", "normal",
@@ -171,8 +175,9 @@ class MockProvider:
         )
 
     def _is_depth_profile(self, q: str) -> bool:
+        ql = q.lower()
         return any(
-            t in q
+            t in ql
             for t in [
                 "depth", "profile", "at 500", "at 100", "temperature at", "salinity at",
                 "different depths", "vertical", "surface", "thermocline",
@@ -180,8 +185,9 @@ class MockProvider:
         ) or bool(DEPTH_RE.search(q))
 
     def _is_time_series(self, q: str) -> bool:
+        ql = q.lower()
         return any(
-            t in q
+            t in ql
             for t in [
                 "time series", "trend", "over", "how has", "how did", "since",
                 "during", "changed", "changes", "monthly", "weekly",
@@ -192,11 +198,13 @@ class MockProvider:
         ) and not self._is_heatmap(q)
 
     def _is_heatmap(self, q: str) -> bool:
-        return any(t in q for t in ["heatmap", "heat map"])
+        ql = q.lower()
+        return any(t in ql for t in ["heatmap", "heat map"])
 
     def _is_metadata(self, q: str) -> bool:
+        ql = q.lower()
         return any(
-            t in q
+            t in ql
             for t in [
                 "active float", "how many float", "which float", "list float",
                 "float status", "deployed", "still reporting", "data quality",
