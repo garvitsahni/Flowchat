@@ -2,13 +2,19 @@ import { useState } from "react";
 import type { Language, QueryResponse } from "./types";
 import { ChatPanel } from "./components/ChatPanel";
 import { VizPanel } from "./components/VizPanel";
+import { AuroraBackground } from "@/components/ui/aurora-background";
 
 export default function App() {
   const [language, setLanguage] = useState<Language>("en");
   const [viz, setViz] = useState<QueryResponse | null>(null);
 
   return (
-    <div className="flex h-screen w-screen flex-col bg-background text-foreground">
+    <div className="relative h-screen w-screen overflow-hidden bg-background text-foreground">
+      <AuroraBackground
+        variant="ocean"
+        className="pointer-events-none absolute inset-0 -z-10 opacity-40"
+      />
+      <div className="flex h-full flex-col">
       <header className="flex items-center justify-between border-b border-border bg-card/60 px-6 py-3 backdrop-blur">
         <div className="flex items-baseline gap-3">
           <h1 className="font-mono text-xl font-semibold tracking-tight text-foreground">
@@ -42,6 +48,7 @@ export default function App() {
           <VizPanel response={viz} />
         </aside>
       </main>
+      </div>
     </div>
   );
 }
