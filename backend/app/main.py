@@ -356,13 +356,19 @@ def _build_explanations(
     if language == "hi":
         return {
             "floats_used": f"{len(floats_used)} फ्लोट्स (समुद्री डेटा एकत्र करने वाले उपकरण) का उपयोग किया गया",
-            "qc_excluded": f"{qc_excluded_count} रीडिंग्स गुणवत्ता जांच में विफल होने के कारण बाहर रखी गईं",
+            "readings": "रीडिंग एक माप है जो किसी विशेष गहराई और समय पर फ्लोट द्वारा ली जाती है।",
+            "qc_excluded": f"{qc_excluded_count} रीडिंग्स गुणवत्ता जांच में विफल होने के कारण बाहर रखी गईं (QC फ्लैग 4)",
+            "usable": "यह उन रीडिंग्स का प्रतिशत है जो गुणवत्ता जांच पास कर चुकी हैं और उपयोग की जा सकती हैं।",
+            "calculation": "दिखाया गया मूल्य सभी वैध रीडिंग्स का माध्य (औसत) है।",
             "time_range": f"डेटा अवधि: {time_range}" if time_range else "कोई विशिष्ट समय सीमा नहीं",
             "sql": "यह वह डेटाबेस क्वेरी है जिसका उपयोग डेटा प्राप्त करने के लिए किया गया",
         }
     return {
-        "floats_used": f"{len(floats_used)} ARGO floats (ocean data collectors) were used for this answer",
-        "qc_excluded": f"{qc_excluded_count} readings were excluded because they failed quality checks",
+        "floats_used": f"{len(floats_used)} ARGO floats (robotic ocean sensors that drift and measure temperature/salinity) were used for this answer",
+        "readings": "A reading is one measurement taken at a single depth and time by a float.",
+        "qc_excluded": f"{qc_excluded_count} readings were excluded because they failed quality checks (QC flag 4 at ingestion)",
+        "usable": "The share of readings that passed quality checks and could be used.",
+        "calculation": "The value shown is the mean (average) computed across all valid readings.",
         "time_range": f"Data covers: {time_range}" if time_range else "No specific time range",
         "sql": "This is the database query used to fetch the data",
     }
