@@ -181,7 +181,7 @@ function ChartWithMap({
   return (
     <div className="flex h-full min-h-0 flex-col gap-2.5">
       <div className="min-h-0 flex-1">{children}</div>
-      <div className="h-[160px] shrink-0">
+      <div className="h-[320px] shrink-0">
         <FloatMap map={map} region={region} />
       </div>
     </div>
