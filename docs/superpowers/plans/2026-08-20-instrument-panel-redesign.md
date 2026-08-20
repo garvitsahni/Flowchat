@@ -1465,11 +1465,11 @@ export default function App() {
 ### Task 9: Clean up dead demo files + tailwind
 
 **Files:**
-- Delete (confirmed unreferenced after Tasks 6-8 — verified by grep below): `frontend/src/demo/` (DemoHub.tsx, PromptInputDemo.tsx), `frontend/src/components/charts/StockChart.tsx`, `frontend/src/components/charts/TimeSeriesChart.tsx`, `frontend/src/components/charts/ChartTooltip.tsx`, `frontend/src/components/ui/ai-chat-input.tsx`, `frontend/src/components/ui/aurora-background.tsx`, `frontend/src/components/ui/blur-fade.tsx`, `frontend/src/components/ui/border-beam.tsx`, `frontend/src/components/ui/magic-card.tsx`, `frontend/src/components/ui/marquee.tsx`, `frontend/src/components/ui/number-ticker.tsx`, `frontend/src/components/ui/particles.tsx`
+- Delete (confirmed unreferenced after Tasks 6-8 — verified by grep below): `frontend/src/demo/` (DemoHub.tsx, PromptInputDemo.tsx, StockChartDemo.tsx), `frontend/src/components/charts/StockChart.tsx`, `frontend/src/components/charts/TimeSeriesChart.tsx`, `frontend/src/components/ui/ai-chat-input.tsx`, `frontend/src/components/ui/aurora-background.tsx`, `frontend/src/components/ui/blur-fade.tsx`, `frontend/src/components/ui/border-beam.tsx`, `frontend/src/components/ui/magic-card.tsx`, `frontend/src/components/ui/marquee.tsx`, `frontend/src/components/ui/number-ticker.tsx`, `frontend/src/components/ui/particles.tsx`
 - Modify: `frontend/tailwind.config.js` (remove `marquee` + `marquee-vertical` keyframes and their `animation` entries)
-- Keep (still referenced): `LanguageToggle.tsx`, `ui/segmented-control.tsx`, `ui/typing-indicator.tsx`, `ui/skeleton.tsx`, `ui/sonner.tsx`, `ui/tabs.tsx`, `ui/tooltip.tsx`
+- Keep (still referenced): `LanguageToggle.tsx`, `ui/segmented-control.tsx`, `ui/typing-indicator.tsx`, `ui/skeleton.tsx`, `ui/sonner.tsx`, `ui/tabs.tsx`, `ui/tooltip.tsx`, `charts/ChartTooltip.tsx` (NOTE: still imported by the kept `DepthProfileChart` + `ComparisonChart`, both rendered by the new VizPanel — do NOT delete)
 
-- [ ] **Step 1:** `Remove-Item` the 12 files/dirs listed above (also `frontend/src/components/ConfidenceBadge.tsx` + `ExplainabilityDrawer.tsx` if Task 6 step 3 hasn't run yet).
+- [ ] **Step 1:** `Remove-Item` the 11 files/dirs listed above (also `frontend/src/components/ConfidenceBadge.tsx` + `ExplainabilityDrawer.tsx` if Task 6 step 3 hasn't run yet — it has, they're already gone).
 - [ ] **Step 2:** In `frontend/tailwind.config.js` delete the `marquee`/`marquee-vertical` keyframes block (currently lines ~70-79) and the `marquee`/`marquee-vertical` animation entries (lines ~82-83). Leave `accordion-down`/`accordion-up` untouched.
 - [ ] **Step 3:** Grep for stale imports before building:
   `rg -n "marquee|particles|aurora-background|blur-fade|border-beam|magic-card|number-ticker|ai-chat-input|StockChart|TimeSeriesChart|ChartTooltip|DemoHub|PromptInputDemo" frontend/src` — expect **zero matches** (aside from inside any remaining comments; none expected).
