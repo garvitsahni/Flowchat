@@ -16,16 +16,25 @@ const TICK = {
 };
 
 export function DepthProfileChart({
-  depths,
-  temps,
-  sals,
+  data,
 }: {
-  depths: number[];
-  temps: number[];
-  sals: number[];
+  data: {
+    depths_m: number[];
+    temperatures_c: number[];
+    salinities_psu: number[];
+    stats?: {
+      temperature_c: { min: number; max: number; mean: number; count: number } | null;
+      salinity_psu: { min: number; max: number; mean: number; count: number } | null;
+      depth_m: { min: number; max: number; mean: number; count: number } | null;
+    };
+  }
 }) {
-  const rows = depths.map((depth, i) => ({ depth, temp: temps[i], sal: sals[i] }));
-  const maxDepth = Math.max(...depths, 1);
+  const { depths_m, temperatures_c, salinities_psu } = data;
+  const rows = depths_m.map((depth, i) => ({ depth, temp: temperatures_c[i], sal: salinities_psu[i] }));
+  const maxDepth = Math.max(...depths_m, 1);
+  const hasTemp = temperatures_c.some(v => v !== null && v !== undefined);
+  const hasSal = salinities_psu.some(v => v !== null && v !== undefined);
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={rows} margin={{ top: 8, right: 8, bottom: 4, left: 8 }}>
@@ -40,29 +49,33 @@ export function DepthProfileChart({
           </linearGradient>
         </defs>
         <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="2 4" vertical={false} />
-        <XAxis
-          dataKey="temp"
-          type="number"
-          xAxisId="temp"
-          orientation="bottom"
-          domain={["dataMin - 1", "dataMax + 1"]}
-          tick={TICK}
-          tickFormatter={(v) => `${v.toFixed(0)}°`}
-          stroke="hsl(var(--border))"
-          tickLine={false}
-          axisLine={{ stroke: "hsl(var(--border))" }}
-        />
-        <XAxis
-          dataKey="sal"
-          type="number"
-          xAxisId="sal"
-          orientation="top"
-          domain={["dataMin - 0.5", "dataMax + 0.5"]}
-          tick={TICK}
-          stroke="hsl(var(--border))"
-          tickLine={false}
-          axisLine={{ stroke: "hsl(var(--border))" }}
-        />
+        {hasTemp && (
+          <XAxis
+            dataKey="temp"
+            type="number"
+            xAxisId="temp"
+            orientation="bottom"
+            domain={["dataMin - 1", "dataMax + 1"]}
+            tick={TICK}
+            tickFormatter={(v) => `${v.toFixed(0)}°`}
+            stroke="hsl(var(--border))"
+            tickLine={false}
+            axisLine={{ stroke: "hsl(var(--border))" }}
+          />
+        )}
+        {hasSal && (
+          <XAxis
+            dataKey="sal"
+            type="number"
+            xAxisId="sal"
+            orientation="top"
+            domain={["dataMin - 0.5", "dataMax + 0.5"]}
+            tick={TICK}
+            stroke="hsl(var(--border))"
+            tickLine={false}
+            axisLine={{ stroke: "hsl(var(--border))" }}
+          />
+        )}
         <YAxis
           dataKey="depth"
           type="number"
@@ -75,30 +88,34 @@ export function DepthProfileChart({
           axisLine={false}
         />
         <Tooltip content={<ChartTooltip />} cursor={{ stroke: "hsl(var(--muted))", strokeDasharray: "3 3" }} />
-        <Area
-          type="monotone"
-          name="Temperature"
-          dataKey="temp"
-          xAxisId="temp"
-          stroke="hsl(var(--primary))"
-          fill="url(#tempGradient)"
-          strokeWidth={2}
-          dot={{ r: 3, fill: "hsl(var(--background))", stroke: "hsl(var(--primary))", strokeWidth: 2 }}
-          activeDot={{ r: 5, fill: "hsl(var(--primary))", stroke: "hsl(var(--background))", strokeWidth: 2, className: "chart-gradient-glow" }}
-          animationDuration={900}
-        />
-        <Area
-          type="monotone"
-          name="Salinity"
-          dataKey="sal"
-          xAxisId="sal"
-          stroke="hsl(var(--muted-foreground))"
-          fill="url(#salGradient)"
-          strokeWidth={2}
-          dot={{ r: 3, fill: "hsl(var(--background))", stroke: "hsl(var(--muted-foreground))", strokeWidth: 2 }}
-          activeDot={{ r: 5, fill: "hsl(var(--muted-foreground))", stroke: "hsl(var(--background))", strokeWidth: 2, className: "chart-gradient-glow" }}
-          animationDuration={1100}
-        />
+        {hasTemp && (
+          <Area
+            type="monotone"
+            name="Temperature"
+            dataKey="temp"
+            xAxisId="temp"
+            stroke="hsl(var(--primary))"
+            fill="url(#tempGradient)"
+            strokeWidth={2}
+            dot={{ r: 3, fill: "hsl(var(--background))", stroke: "hsl(var(--primary))", strokeWidth: 2 }}
+            activeDot={{ r: 5, fill: "hsl(var(--primary))", stroke: "hsl(var(--background))", strokeWidth: 2, className: "chart-gradient-glow" }}
+            animationDuration={900}
+          />
+        )}
+        {hasSal && (
+          <Area
+            type="monotone"
+            name="Salinity"
+            dataKey="sal"
+            xAxisId="sal"
+            stroke="hsl(var(--muted-foreground))"
+            fill="url(#salGradient)"
+            strokeWidth={2}
+            dot={{ r: 3, fill: "hsl(var(--background))", stroke: "hsl(var(--muted-foreground))", strokeWidth: 2 }}
+            activeDot={{ r: 5, fill: "hsl(var(--muted-foreground))", stroke: "hsl(var(--background))", strokeWidth: 2, className: "chart-gradient-glow" }}
+            animationDuration={1100}
+          />
+        )}
       </AreaChart>
     </ResponsiveContainer>
   );

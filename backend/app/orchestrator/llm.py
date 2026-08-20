@@ -112,3 +112,23 @@ class LLMChatProvider(Protocol):
         if obj is not None and "answer" in obj:
             return str(obj["answer"])
         return text
+
+    def semantic_validate(self, question: str, generated: GeneratedSQL) -> tuple[bool, str]:
+        """Validate that the generated SQL semantically matches the user's question."""
+        if generated.sql is None or generated.intent_type == "unsupported":
+            return True, ""  # Unsupported questions are valid by definition
+
+        messages = prompts.build_semantic_validate_messages(
+            question, generated.sql, generated.intent_type
+        )
+        raw = self._complete(messages, json_mode=True)
+        obj = extract_json_object(raw)
+        if obj is None:
+            logger.warning("%s: no JSON in semantic_validate reply, assuming valid.", self.name)
+            return True, ""
+
+        valid = obj.get("valid", True)
+        reason = obj.get("reason", "")
+        if not valid:
+            logger.warning("%s: semantic validation failed: %s", self.name, reason)
+        return valid, reason

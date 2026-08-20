@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     min_float_count: int = 3
     min_qc_pass_ratio: float = 0.7
 
+    # Semantic validation (validates SQL matches user intent)
+    semantic_validation_enabled: bool = True
+    semantic_max_retries: int = 2
+
     @property
     def db_url(self) -> str:
         return (

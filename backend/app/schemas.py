@@ -19,6 +19,8 @@ class Explainability(BaseModel):
     floats_used: list[str] = Field(default_factory=list)
     qc_excluded_count: int = 0
     time_range_queried: str = ""
+    # Human-readable explanations for non-technical users
+    explanations: dict[str, str] = Field(default_factory=dict)
 
 
 ChartType = Literal["depth_profile", "trajectory", "time_series", "comparison", "heatmap", "none"]

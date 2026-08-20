@@ -1,13 +1,38 @@
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { FlaskConical, TriangleAlert, Waves } from "lucide-react";
-import type { QueryResponse } from "../types";
+import type { QueryResponse, ChartData, DepthProfileData, TrajectoryData, TimeSeriesData, ComparisonData, HeatmapData, HeatmapOceanData } from "../types";
 import { TrajectoryMap } from "./TrajectoryMap";
 import { DepthProfileChart } from "./charts/DepthProfileChart";
 import { ComparisonChart } from "./charts/ComparisonChart";
 import { ScientificChart } from "./charts/ScientificChart";
 import { HeatmapChart } from "./charts/HeatmapChart";
+import { OceanHeatmapWrapper } from "./charts/OceanHeatmapChart";
 import { Skeleton } from "@/components/ui/skeleton";
+
+function isTrajectory(data: ChartData): data is TrajectoryData {
+  return data.type === "trajectory";
+}
+
+function isComparison(data: ChartData): data is ComparisonData {
+  return data.type === "comparison";
+}
+
+function isTimeSeries(data: ChartData): data is TimeSeriesData {
+  return data.type === "time_series";
+}
+
+function isHeatmap(data: ChartData): data is HeatmapData {
+  return data.type === "heatmap";
+}
+
+function isOceanHeatmap(data: HeatmapData): data is HeatmapOceanData {
+  return data.subtype === "ocean";
+}
+
+function isDepthProfile(data: ChartData): data is DepthProfileData {
+  return data.type === "depth_profile";
+}
 
 export function VizPanel({
   response,
@@ -64,19 +89,19 @@ export function VizPanel({
     );
   }
 
-  if (type === "trajectory") {
+  if (isTrajectory(data)) {
     return (
-      <ChartShell title="trajectory" subtitle={data.region as string | undefined}>
+      <ChartShell title="trajectory" subtitle={data.region}>
         <TrajectoryMap
-          latitudes={data.latitudes as number[]}
-          longitudes={data.longitudes as number[]}
-          floatId={data.float_id as string}
+          latitudes={data.latitudes}
+          longitudes={data.longitudes}
+          floatId={data.float_id}
         />
       </ChartShell>
     );
   }
 
-  if (type === "comparison" && (data.target === null || data.baseline === null)) {
+  if (isComparison(data) && (data.target === null || data.baseline === null)) {
     return (
       <StateCard
         icon={<FlaskConical className="text-warning" size={20} strokeWidth={1.5} />}
@@ -87,35 +112,45 @@ export function VizPanel({
     );
   }
 
-  if (type === "time_series") {
+  if (isTimeSeries(data)) {
     return <ScientificChart key={response as unknown as string} response={response} />;
   }
 
-  if (type === "heatmap") {
+  if (isHeatmap(data)) {
+    if (isOceanHeatmap(data)) {
+      return <OceanHeatmapWrapper data={data} />;
+    }
+    // Time-depth heatmap (existing)
     const title = "heatmap";
-    const subtitle = `${data.region as string}${data.period ? ` · ${data.period as string}` : ""}`;
+    const subtitle = `${data.region ?? ""}${data.period ? ` · ${data.period}` : ""}`;
     return (
       <ChartShell title={title} subtitle={subtitle}>
-        <HeatmapChart data={data.rows as any[]} />
+        <HeatmapChart data={data.grid} />
       </ChartShell>
     );
   }
 
-  const title = type === "depth_profile" ? "depth profile" : "comparison";
-  const subtitle = `${data.region as string}${data.period ? ` · ${data.period as string}` : ""}`;
-  return (
-    <ChartShell title={title} subtitle={subtitle}>
-      {type === "depth_profile" ? (
-        <DepthProfileChart
-          depths={data.depths_m as number[]}
-          temps={data.temperatures_c as number[]}
-          sals={data.salinities_psu as number[]}
-        />
-      ) : (
+  if (isDepthProfile(data)) {
+    const title = "depth profile";
+    const subtitle = `${data.region ?? ""}${data.period ? ` · ${data.period}` : ""}`;
+    return (
+      <ChartShell title={title} subtitle={subtitle}>
+        <DepthProfileChart data={data} />
+      </ChartShell>
+    );
+  }
+
+  if (isComparison(data)) {
+    const title = "comparison";
+    const subtitle = `${data.region ?? ""}${data.period ? ` · ${data.period}` : ""}`;
+    return (
+      <ChartShell title={title} subtitle={subtitle}>
         <ComparisonChart target={data.target as number} baseline={data.baseline as number} />
-      )}
-    </ChartShell>
-  );
+      </ChartShell>
+    );
+  }
+
+  return null;
 }
 
 function ChartShell({

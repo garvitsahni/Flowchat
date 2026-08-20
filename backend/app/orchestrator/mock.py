@@ -135,6 +135,12 @@ class MockProvider:
             return self._phrase_comparison(rows, result, confidence)
         return "The query returned the requested data; see the visualization."
 
+    def semantic_validate(self, question: str, generated: GeneratedSQL) -> tuple[bool, str]:
+        """Mock always passes semantic validation - it's deterministic by design."""
+        if generated.sql is None or generated.intent_type == "unsupported":
+            return True, ""
+        return True, ""
+
     # ------------------------------------------------------------- intent tests
 
     def _is_out_of_scope(self, q: str) -> bool:

@@ -3,13 +3,14 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
+  Line,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 import { toast } from "sonner";
-import type { QueryResponse } from "../../types";
+import type { QueryResponse, TimeSeriesData } from "../../types";
 import {
   DEMO_METRICS,
   exportCsv,
@@ -46,7 +47,7 @@ function ScientificTooltip({
   color,
 }: {
   active?: boolean;
-  payload?: { payload: { value: number; observations: number; quality: number } }[];
+  payload?: { payload: { value: number; period: string } }[];
   label?: string | number;
   metric: string;
   unit: string;
@@ -54,37 +55,46 @@ function ScientificTooltip({
 }) {
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
-  const rows = [
-    { name: metric, value: `${p.value.toFixed(1)} ${unit}`, color },
-    { name: "Observations", value: p.observations ? p.observations.toLocaleString() : "N/A", color: "#8b8b8b" },
-    { name: "Quality", value: p.quality ? `${p.quality}%` : "N/A", color: (p.quality && p.quality >= 80) ? "#34d399" : (p.quality && p.quality >= 65) ? "#22d3ee" : "#fbbf24" },
-  ];
   return (
     <div className="border-l-2 border-primary bg-[#0D0F0F] px-3 py-2.5 font-mono text-xs text-foreground shadow-xl" style={{ borderColor: color }}>
       <div className="mb-1.5 text-muted-foreground">{label}</div>
-      {rows.map((r) => (
-        <div key={r.name} className="flex items-center justify-between gap-4 py-0.5">
-          <span className="text-muted-foreground">{r.name}</span>
-          <span style={{ color: r.color }} className="font-semibold">{r.value}</span>
-        </div>
-      ))}
+      <div className="flex justify-between gap-4 py-0.5">
+        <span className="text-muted-foreground">{metric}</span>
+        <span style={{ color }} className="font-semibold">{p.value?.toFixed(1)} {unit}</span>
+      </div>
     </div>
   );
+}
+
+function StatBadge({ label, value, unit = "" }: { label: string; value: number | string | null; unit?: string }) {
+  if (value === null || value === undefined) return null;
+  return (
+    <span className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
+      <span className="text-foreground">{label}</span>
+      <span className="font-semibold">{value}{unit}</span>
+    </span>
+  );
+}
+
+interface ChartPoint {
+  period: string;
+  value: number | null;
+  trend?: number | null;
 }
 
 export function ScientificChart({ response }: { response: QueryResponse }) {
   const [metric, setMetric] = useState<DemoMetric>("temperature");
   const [scale, setScale] = useState<DemoScale>("monthly");
 
-  const isRealData = Array.isArray(response.chart_data.months) && Array.isArray(response.chart_data.values);
-  
-  let points: any[];
+  const data = response.chart_data as TimeSeriesData;
+  const isRealData = Array.isArray(data.months) && Array.isArray(data.values);
+
+  let points: ChartPoint[];
   let cfg: any;
   let title: string;
   let region: string;
-  
+
   if (isRealData) {
-    const data = response.chart_data;
     const isTemp = data.unit === "°C";
     const color = isTemp ? "#2dd4bf" : "#4da3ff";
     cfg = {
@@ -94,19 +104,22 @@ export function ScientificChart({ response }: { response: QueryResponse }) {
       domain: ["dataMin", "dataMax"],
       ticks: undefined,
     };
-    points = (data.months as string[]).map((m, i) => ({
+    const months = data.months;
+    const values = data.values;
+    const trend = data.trend ?? null;
+
+    points = months.map((m, i) => ({
       period: m,
-      value: (data.values as number[])[i],
-      observations: 0,
-      quality: 0,
+      value: values[i],
+      trend: trend ? trend[i] : undefined,
     }));
     title = "Time Series";
-    region = (data.region as string) || "Indian Ocean";
+    region = data.region ?? "Indian Ocean";
   } else {
     cfg = DEMO_METRICS[metric];
-    points = cfg[scale];
+    points = cfg[scale].map((p: any) => ({ period: p.period, value: p.value, trend: undefined }));
     title = `${scale === "monthly" ? "Monthly Mean" : "Annual Mean"}`;
-    region = (response.chart_data.region as string | undefined) ?? "Indian Ocean";
+    region = (response.chart_data as any).region ?? "Indian Ocean";
   }
 
   const level = response.confidence === "low" ? ("low" as const) : ("high" as const);
@@ -120,16 +133,25 @@ export function ScientificChart({ response }: { response: QueryResponse }) {
     toast.success("Export ready", { description: `${metric} · ${scale} · CSV downloaded` });
   };
 
+  const hasValidData = points.some(p => p.value !== null && p.value !== undefined);
+
   return (
     <div className="flex h-full min-h-0 flex-col border border-border bg-[#111313]">
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-3.5 py-2.5">
         <span className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-foreground">{title}</span>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <span className="font-mono text-xs text-muted-foreground">{region}</span>
           <span className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            {points.length} observations
+            {points.filter(p => p.value !== null).length} observations
           </span>
+          {data.stats?.value && (
+            <>
+              <StatBadge label="Mean" value={data.stats.value.mean?.toFixed(1)} unit={cfg.unit} />
+              <StatBadge label="Min" value={data.stats.value.min?.toFixed(1)} unit={cfg.unit} />
+              <StatBadge label="Max" value={data.stats.value.max?.toFixed(1)} unit={cfg.unit} />
+            </>
+          )}
           <DataQuality level={level} />
         </div>
       </header>
@@ -141,6 +163,12 @@ export function ScientificChart({ response }: { response: QueryResponse }) {
                 <stop offset="5%" stopColor={cfg.color} stopOpacity={0.3} />
                 <stop offset="95%" stopColor={cfg.color} stopOpacity={0} />
               </linearGradient>
+              {points.some(p => p.trend !== undefined) && (
+                <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#fbbf24" stopOpacity={0} />
+                </linearGradient>
+              )}
             </defs>
             <CartesianGrid stroke="#1E2020" strokeDasharray="2 4" vertical={false} />
             <XAxis
@@ -177,6 +205,18 @@ export function ScientificChart({ response }: { response: QueryResponse }) {
               animationDuration={900}
               isAnimationActive
             />
+            {points.some(p => p.trend !== undefined) && hasValidData && (
+              <Line
+                type="monotone"
+                dataKey="trend"
+                stroke="#fbbf24"
+                strokeWidth={1.5}
+                strokeDasharray="4 4"
+                dot={false}
+                animationDuration={900}
+                isAnimationActive
+              />
+            )}
           </AreaChart>
         </ResponsiveContainer>
       </div>

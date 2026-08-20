@@ -198,3 +198,39 @@ def build_phrase_messages(result: QueryResult, confidence: str, language: str) -
         {"role": "system", "content": system},
         {"role": "user", "content": user},
     ]
+
+
+SEMANTIC_VALIDATE_SYSTEM = """You are a semantic validator for FloatChat, a system that answers questions about ARGO ocean float data.
+
+Given a user's question and a generated SQL query, determine if the SQL correctly answers the user's question.
+
+Check these critical mismatches:
+1. MEASUREMENT TYPE: Does the SELECT clause query the right measurement?
+   - temperature_c for temperature/heat/warm/cold questions
+   - salinity_psu for salinity/salt questions
+   - Both if the question asks for both or is ambiguous
+2. REGION/LOCATION: Does the WHERE clause filter for the correct region/city mentioned in the question?
+   - Arabian Sea, Bay of Bengal, Andaman Sea, Indian Ocean
+   - Cities: Mumbai, Chennai, Kolkata, Kochi (via ST_DWithin)
+3. DEPTH: If question specifies a depth (e.g., "at 500m"), does the query filter depth_m appropriately?
+4. TIME PERIOD: Does the query filter for the correct time period mentioned?
+5. INTENT TYPE: Does the intent_type match the question type?
+   - depth_profile: vertical profile at a location
+   - trajectory: float path over time
+   - time_series: trend over months/years
+   - comparison: target period vs baseline
+   - metadata: float status, counts, QC stats
+
+Output ONLY a JSON object: {"valid": true/false, "reason": "explanation if invalid, empty string if valid"}"""
+
+
+def build_semantic_validate_messages(question: str, generated_sql: str, intent_type: str) -> list[dict]:
+    user = (
+        f"Question: {question}\n\n"
+        f"Generated SQL: {generated_sql}\n"
+        f"Intent Type: {intent_type}"
+    )
+    return [
+        {"role": "system", "content": SEMANTIC_VALIDATE_SYSTEM},
+        {"role": "user", "content": user},
+    ]

@@ -1,8 +1,20 @@
-import type { QueryResponse } from "../../types";
+import type { QueryResponse, TimeSeriesData, HeatmapData, ChartData } from "../../types";
 import { getRegionContext } from "../../lib/demo";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { DataContext } from "./DataContext";
 import { EvidencePanel } from "./EvidencePanel";
+
+function isTimeSeries(data: ChartData): data is TimeSeriesData {
+  return data.type === "time_series";
+}
+
+function isHeatmap(data: ChartData): data is HeatmapData {
+  return data.type === "heatmap";
+}
+
+function isNone(data: ChartData): data is { type: "none" } {
+  return data.type === "none";
+}
 
 function calcLabel(response: QueryResponse): string {
   switch (response.chart_type) {
@@ -25,10 +37,18 @@ function highlightNumbers(text: string): (string | JSX.Element)[] {
 }
 
 export function AnswerCard({ text, response }: { text: string; response: QueryResponse }) {
-  const region = (response.chart_data.region as string | undefined) ?? undefined;
-  const months = response.chart_data.months as string[] | undefined;
+  const data = response.chart_data;
+  const region = (!isNone(data) && data.region) as string | undefined;
+  
+  let months: string[] | undefined;
+  if (isTimeSeries(data)) {
+    months = data.months;
+  } else if (isHeatmap(data) && data.subtype === "time_depth") {
+    months = data.months;
+  }
+  
   const period =
-    (response.chart_data.period as string | undefined) ??
+    (!isNone(data) ? data.period : undefined) ??
     (months && months.length >= 2 ? `${months[0]} \u2192 ${months[months.length - 1]}` : undefined);
   const ctx = getRegionContext(region ?? "");
   return (

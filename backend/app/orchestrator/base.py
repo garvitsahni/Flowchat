@@ -41,3 +41,9 @@ class LLMProvider(Protocol):
     def phrase_answer(self, result: QueryResult, confidence: str, language: str = "en") -> str:
         """Turn raw result rows into a natural-language answer (phrasing pass)."""
         ...
+
+    def semantic_validate(self, question: str, generated: GeneratedSQL) -> tuple[bool, str]:
+        """Check if generated SQL semantically matches the user's question.
+        Returns (is_valid, reason_if_invalid).
+        """
+        ...

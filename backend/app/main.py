@@ -87,6 +87,38 @@ def _clean_phrase(text: str) -> str:
     )
 
 
+def _semantic_validate_with_retry(provider, question: str, language: str) -> tuple:
+    """Run semantic validation with retries. Returns (generated, valid, reason)."""
+    if not settings.semantic_validation_enabled:
+        generated = provider.generate_sql(question, language)
+        return generated, True, ""
+
+    max_retries = settings.semantic_max_retries
+    for attempt in range(max_retries + 1):
+        generated = provider.generate_sql(question, language)
+        if generated.sql is None:
+            # Unsupported intent — no validation needed
+            return generated, True, ""
+
+        valid, reason = provider.semantic_validate(question, generated)
+        if valid:
+            return generated, True, ""
+
+        logger.warning(
+            "Semantic validation failed (attempt %d/%d): %s — regenerating SQL",
+            attempt + 1, max_retries + 1, reason
+        )
+        if attempt == max_retries:
+            logger.error(
+                "Max semantic validation retries (%d) exceeded; proceeding with last SQL (fail-open)",
+                max_retries
+            )
+            return generated, False, reason
+
+    # Should not reach here, but fail-open
+    return generated, True, ""
+
+
 @app.post("/query", response_model=QueryResponse)
 async def query(req: QueryRequest) -> QueryResponse:
     provider = provider_factory(settings.llm_provider)
@@ -108,6 +140,14 @@ async def query(req: QueryRequest) -> QueryResponse:
 
         provider = MockProvider()
         generated = provider.generate_sql(req.question, req.language)
+
+    if generated.sql is None:
+        return _graceful_refusal(generated.explanation, req.language)
+
+    # Semantic validation: ensure generated SQL matches user intent
+    generated, valid, reason = _semantic_validate_with_retry(provider, req.question, req.language)
+    if not valid:
+        logger.warning("Semantic validation failed after retries: %s — proceeding anyway (fail-open)", reason)
 
     if generated.sql is None:
         return _graceful_refusal(generated.explanation, req.language)
@@ -186,6 +226,10 @@ async def query(req: QueryRequest) -> QueryResponse:
     if not float_ids:
         float_ids = await _floats_in_scope(result, generated)
 
+    explanations = _build_explanations(
+        float_ids, confidence.qc_excluded_count, generated.requested_period, req.language
+    )
+
     return QueryResponse(
         answer_text=answer_text,
         language=req.language,
@@ -200,8 +244,28 @@ async def query(req: QueryRequest) -> QueryResponse:
             floats_used=float_ids,
             qc_excluded_count=confidence.qc_excluded_count,
             time_range_queried=generated.requested_period,
+            explanations=explanations,
         ),
     )
+
+
+def _build_explanations(
+    floats_used: list[str], qc_excluded_count: int, time_range: str, language: str
+) -> dict[str, str]:
+    """Build simple explanations for explainability terms."""
+    if language == "hi":
+        return {
+            "floats_used": f"{len(floats_used)} फ्लोट्स (समुद्री डेटा एकत्र करने वाले उपकरण) का उपयोग किया गया",
+            "qc_excluded": f"{qc_excluded_count} रीडिंग्स गुणवत्ता जांच में विफल होने के कारण बाहर रखी गईं",
+            "time_range": f"डेटा अवधि: {time_range}" if time_range else "कोई विशिष्ट समय सीमा नहीं",
+            "sql": "यह वह डेटाबेस क्वेरी है जिसका उपयोग डेटा प्राप्त करने के लिए किया गया",
+        }
+    return {
+        "floats_used": f"{len(floats_used)} ARGO floats (ocean data collectors) were used for this answer",
+        "qc_excluded": f"{qc_excluded_count} readings were excluded because they failed quality checks",
+        "time_range": f"Data covers: {time_range}" if time_range else "No specific time range",
+        "sql": "This is the database query used to fetch the data",
+    }
 
 
 async def _floats_in_scope(result, generated) -> list[str]:
