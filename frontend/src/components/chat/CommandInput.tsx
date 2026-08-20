@@ -32,12 +32,14 @@ export function CommandInput({
             }
           }}
           placeholder="Ask about floats, regions, or measurements..."
+          aria-label="Question"
           disabled={disabled}
           className="min-w-0 flex-1 bg-transparent font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none disabled:opacity-50"
         />
         <button
           type="button"
           onClick={submit}
+          aria-label="Send question"
           disabled={disabled || !value.trim()}
           className="flex h-7 w-7 shrink-0 items-center justify-center border border-border text-muted-foreground transition-colors hover:border-primary/60 hover:text-primary disabled:opacity-40"
         >
