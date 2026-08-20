@@ -1310,7 +1310,7 @@ export function VizPanel({
   }
 
   if (type === "time_series") {
-    return <ScientificChart key={response} response={response} />;
+    return <ScientificChart key={response as unknown as string} response={response} />;
   }
 
   const title = type === "depth_profile" ? "depth profile" : "comparison";
