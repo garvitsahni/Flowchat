@@ -158,6 +158,7 @@ export function ChatPanel({
         <PromptInput
           onSubmit={(value) => void send(value)}
           placeholder="Ask about floats, regions, or measurements…"
+          models={["Gemini 3.5 Flash"]}
           className="mx-auto"
         />
       </div>

@@ -317,6 +317,7 @@ export const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
     const [selectedModel, setSelectedModel] = useState(models[0]);
     const [effortIndex, setEffortIndex] = useState(1);
     const [isModelSelectOpen, setIsModelSelectOpen] = useState(false);
+    const hasModelOptions = models.length > 1;
 
     const [attachments, setAttachments] = useState<Attachment[]>([]);
     const [activeAttachment, setActiveAttachment] = useState<{ attachment: Attachment; rect: DOMRect } | null>(null);
@@ -844,7 +845,9 @@ export const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setIsModelSelectOpen((prev) => !prev);
+                    if (hasModelOptions) {
+                      setIsModelSelectOpen((prev) => !prev);
+                    }
                   }}
                   className={cn(
                     "group flex h-8 items-center gap-1.5 rounded-xl border border-transparent px-2.5 outline-none",
@@ -852,19 +855,21 @@ export const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
                     "hover:bg-muted/80 hover:text-foreground active:scale-[0.97]",
                     isModelSelectOpen && "border-border bg-muted/70 text-foreground"
                   )}
-                  aria-haspopup="listbox"
-                  aria-expanded={isModelSelectOpen}
+                  aria-haspopup={hasModelOptions ? "listbox" : undefined}
+                  aria-expanded={hasModelOptions ? isModelSelectOpen : undefined}
                 >
                   <ModelIcon model={selectedModel} className="size-3.5 shrink-0" />
                   <span className="text-xs font-medium">
                     <MorphingText text={selectedModel} />
                   </span>
-                  <svg
-                    width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true"
-                    className={cn("transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]", isModelSelectOpen && "rotate-180")}
-                  >
-                    <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  {hasModelOptions && (
+                    <svg
+                      width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true"
+                      className={cn("transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]", isModelSelectOpen && "rotate-180")}
+                    >
+                      <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
                 </button>
 
                 <button
