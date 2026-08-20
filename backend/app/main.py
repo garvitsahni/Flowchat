@@ -17,7 +17,7 @@ from .answers import execute_statements, build_result
 from .config import settings
 from .db import close_pool, ping
 from .guardrails import GuardrailViolation
-from .orchestrator.mock import provider_factory
+from .orchestrator.mock import provider_chain, provider_factory
 from .schemas import (
     HealthResponse,
     QueryRequest,
@@ -87,20 +87,30 @@ def _clean_phrase(text: str) -> str:
     )
 
 
-def _semantic_validate_with_retry(provider, question: str, language: str) -> tuple:
-    """Run semantic validation with retries. Returns (generated, valid, reason)."""
+def _semantic_validate_with_retry(provider, question: str, language: str, generated) -> tuple:
+    """Validate the given SQL against the question. Returns (generated, valid, reason).
+
+    Does NOT regenerate SQL - only validates the provided generated object.
+    Fails open on provider errors.
+    """
     if not settings.semantic_validation_enabled:
-        generated = provider.generate_sql(question, language)
+        return generated, True, ""
+
+    if generated.sql is None:
         return generated, True, ""
 
     max_retries = settings.semantic_max_retries
     for attempt in range(max_retries + 1):
-        generated = provider.generate_sql(question, language)
-        if generated.sql is None:
-            # Unsupported intent — no validation needed
-            return generated, True, ""
+        try:
+            valid, reason = provider.semantic_validate(question, generated)
+        except Exception as exc:
+            logger.warning("Provider %s failed during semantic_validate (attempt %d): %s",
+                           provider.name, attempt + 1, exc)
+            if attempt == max_retries:
+                logger.error("Max semantic validation retries exceeded; failing open")
+                return generated, True, ""
+            continue
 
-        valid, reason = provider.semantic_validate(question, generated)
         if valid:
             return generated, True, ""
 
@@ -115,84 +125,157 @@ def _semantic_validate_with_retry(provider, question: str, language: str) -> tup
             )
             return generated, False, reason
 
-    # Should not reach here, but fail-open
+        # Regenerate SQL for next attempt
+        try:
+            generated = provider.generate_sql(question, "en")
+            if generated.sql is None:
+                return generated, True, ""
+        except Exception as exc:
+            logger.warning("Provider %s failed during SQL regeneration (attempt %d): %s",
+                           provider.name, attempt + 1, exc)
+            if attempt == max_retries:
+                logger.error("Max semantic validation retries exceeded; failing open")
+                return generated, True, ""
+            continue
+
     return generated, True, ""
 
 
 @app.post("/query", response_model=QueryResponse)
 async def query(req: QueryRequest) -> QueryResponse:
-    provider = provider_factory(settings.llm_provider)
+    chain = provider_chain()
+    logger.info("LLM provider chain: %s", " -> ".join(p.name for p in chain))
 
-    try:
-        generated = provider.generate_sql(req.question, req.language)
-    except NotImplementedError:
-        # Provider scaffold with no key — fall back to the deterministic mock.
-        logger.warning("Provider %s not implemented; using mock.", provider.name)
+    # Walk the chain to find the first provider that can generate SQL
+    provider = None
+    generated = None
+    provider_idx = 0
+    for idx, cand in enumerate(chain):
+        try:
+            generated = cand.generate_sql(req.question, req.language)
+            provider = cand
+            provider_idx = idx
+            break
+        except NotImplementedError:
+            logger.info("Provider %s unavailable (no key); trying next.", cand.name)
+            continue
+        except Exception:
+            logger.exception("Provider %s failed during SQL generation; trying next.", cand.name)
+            continue
+
+    # Should never happen since MockProvider is terminal
+    if provider is None or generated is None:
         from .orchestrator.mock import MockProvider
-
-        provider = MockProvider()
-        generated = provider.generate_sql(req.question, req.language)
-    except Exception:
-        # Transient provider API failure — degrade to the deterministic mock rather
-        # than surfacing a 500. Mock still generates real SQL against the real schema.
-        logger.exception("Provider %s failed during SQL generation; using mock.", provider.name)
-        from .orchestrator.mock import MockProvider
-
         provider = MockProvider()
         generated = provider.generate_sql(req.question, req.language)
 
     if generated.sql is None:
         return _graceful_refusal(generated.explanation, req.language)
 
-    # Semantic validation: ensure generated SQL matches user intent
-    generated, valid, reason = _semantic_validate_with_retry(provider, req.question, req.language)
+    # Semantic validation using the serving provider, with chain fallback so a
+    # rate-limited/errored provider degrades instead of surfacing a 500.
+    valid = True
+    reason = ""
+    try:
+        generated, valid, reason = _semantic_validate_with_retry(provider, req.question, req.language, generated)
+    except Exception:
+        logger.exception("Semantic validation failed with provider %s; trying next in chain.", provider.name)
+        for next_idx in range(provider_idx + 1, len(chain)):
+            next_provider = chain[next_idx]
+            try:
+                generated, valid, reason = _semantic_validate_with_retry(next_provider, req.question, req.language, generated)
+                provider = next_provider
+                provider_idx = next_idx
+                break
+            except Exception:
+                logger.exception("Provider %s failed during semantic validation fallback; trying next.", next_provider.name)
+                continue
+        else:
+            logger.warning("All providers failed semantic validation; falling back to mock.")
+            from .orchestrator.mock import MockProvider
+            mock = MockProvider()
+            generated, valid, reason = _semantic_validate_with_retry(mock, req.question, req.language, generated)
+            provider = mock
     if not valid:
         logger.warning("Semantic validation failed after retries: %s — proceeding anyway (fail-open)", reason)
 
     if generated.sql is None:
         return _graceful_refusal(generated.explanation, req.language)
 
+    # Guardrail validation with chain fallback
+    statements = None
     try:
         statements = guardrails.validate_sql(generated.sql)
     except GuardrailViolation as exc:
-        logger.warning("Guardrail rejection: %s — falling back to mock provider.", exc.reason)
-        from .orchestrator.mock import MockProvider
-
-        mock = MockProvider()
-        generated = mock.generate_sql(req.question, req.language)
-        if generated.sql is None:
-            return _graceful_refusal(generated.explanation, req.language)
-        try:
-            statements = guardrails.validate_sql(generated.sql)
-        except GuardrailViolation as exc2:
-            logger.warning("Mock SQL also rejected: %s", exc2.reason)
-            return _graceful_refusal(
-                "I couldn't safely answer that question.", req.language, reason="unsafe"
-            )
+        logger.warning("Guardrail rejection by %s: %s — trying next in chain.", provider.name, exc.reason)
+        # Try remaining providers in chain (excluding current) before mock
+        for next_idx in range(provider_idx + 1, len(chain)):
+            next_provider = chain[next_idx]
+            try:
+                generated = next_provider.generate_sql(req.question, req.language)
+                if generated.sql is None:
+                    continue
+                statements = guardrails.validate_sql(generated.sql)
+                provider = next_provider
+                provider_idx = next_idx
+                break
+            except Exception:
+                logger.exception("Provider %s failed during guardrail fallback; trying next.", next_provider.name)
+                continue
+        else:
+            # All chain exhausted — fall back to mock
+            logger.warning("All providers rejected by guardrails; using mock.")
+            from .orchestrator.mock import MockProvider
+            mock = MockProvider()
+            generated = mock.generate_sql(req.question, req.language)
+            if generated.sql is None:
+                return _graceful_refusal(generated.explanation, req.language)
+            try:
+                statements = guardrails.validate_sql(generated.sql)
+            except GuardrailViolation as exc2:
+                logger.warning("Mock SQL also rejected: %s", exc2.reason)
+                return _graceful_refusal(
+                    "I couldn't safely answer that question.", req.language, reason="unsafe"
+                )
 
     rows_by_statement: list[list[dict]] | None = None
+    # Execute with chain fallback
     try:
         rows_by_statement = await execute_statements(statements)
     except Exception:
-        # Invalid-but-schema-valid SQL (e.g. a subquery the small model botched) must
-        # degrade gracefully — fall back to the deterministic mock's SQL before refusing.
         logger.exception(
-            "Executing validated SQL failed; retrying with mock provider. SQL=%s", generated.sql
+            "Executing validated SQL failed (provider=%s); trying next in chain. SQL=%s",
+            provider.name, generated.sql
         )
-        from .orchestrator.mock import MockProvider
-
-        mock = MockProvider()
-        generated = mock.generate_sql(req.question, req.language)
-        if generated.sql is None:
-            return _graceful_refusal(generated.explanation, req.language)
-        try:
-            statements = guardrails.validate_sql(generated.sql)
-            rows_by_statement = await execute_statements(statements)
-        except Exception:
-            logger.exception("Mock fallback also failed; refusing gracefully.")
-            return _graceful_refusal(
-                "I couldn't safely answer that question.", req.language, reason="unsafe"
-            )
+        for next_idx in range(provider_idx + 1, len(chain)):
+            next_provider = chain[next_idx]
+            try:
+                generated = next_provider.generate_sql(req.question, req.language)
+                if generated.sql is None:
+                    continue
+                statements = guardrails.validate_sql(generated.sql)
+                rows_by_statement = await execute_statements(statements)
+                provider = next_provider
+                provider_idx = next_idx
+                break
+            except Exception:
+                logger.exception("Provider %s failed during execution fallback; trying next.", next_provider.name)
+                continue
+        else:
+            logger.exception("All providers failed execution; using mock.")
+            from .orchestrator.mock import MockProvider
+            mock = MockProvider()
+            generated = mock.generate_sql(req.question, req.language)
+            if generated.sql is None:
+                return _graceful_refusal(generated.explanation, req.language)
+            try:
+                statements = guardrails.validate_sql(generated.sql)
+                rows_by_statement = await execute_statements(statements)
+            except Exception:
+                logger.exception("Mock fallback also failed; refusing gracefully.")
+                return _graceful_refusal(
+                    "I couldn't safely answer that question.", req.language, reason="unsafe"
+                )
 
     result = build_result(
         rows_by_statement,
@@ -213,11 +296,23 @@ async def query(req: QueryRequest) -> QueryResponse:
     confidence = await assess(result.region or generated.requested_region, year_month)
     result.qc_excluded_count = confidence.qc_excluded_count
 
+    # Phrasing with chain fallback
+    answer_text = ""
     try:
         answer_text = provider.phrase_answer(result, confidence.confidence, req.language)
     except Exception:
-        logger.exception("Provider %s failed during phrasing; using fallback.", provider.name)
-        answer_text = ""
+        logger.exception("Provider %s failed during phrasing; trying next in chain.", provider.name)
+        for next_idx in range(provider_idx + 1, len(chain)):
+            next_provider = chain[next_idx]
+            try:
+                answer_text = next_provider.phrase_answer(result, confidence.confidence, req.language)
+                if answer_text:
+                    provider = next_provider
+                    provider_idx = next_idx
+                    break
+            except Exception:
+                logger.exception("Provider %s failed during phrasing fallback; trying next.", next_provider.name)
+                continue
     if not answer_text:
         answer_text = answers.fallback_answer(result, confidence.confidence)
     answer_text = _clean_phrase(answer_text)

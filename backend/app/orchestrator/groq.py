@@ -3,7 +3,7 @@
 Activates when LLM_PROVIDER=groq AND GROQ_API_KEY is set. Uses Groq's
 OpenAI-compatible /chat/completions endpoint over httpx. Reasoning models
 (gpt-oss, qwen) need the OpenAI-style `max_completion_tokens` param — Groq
-rejects `max_tokens` for them — and their ` thinking` blocks would burn the
+rejects `max_tokens` for them — and their `thinking` blocks would burn the
 token budget, so a non-reasoning default is preferred.
 """
 
@@ -38,9 +38,9 @@ class GroqProvider(LLMChatProvider):
                 "model": settings.groq_model,
                 "messages": messages,
                 "temperature": 0.0,
-                "max_completion_tokens": 2048,
+                "max_completion_tokens": 4096,
             },
-            timeout=60.0,
+            timeout=90.0,
         )
         resp.raise_for_status()
         data = resp.json()

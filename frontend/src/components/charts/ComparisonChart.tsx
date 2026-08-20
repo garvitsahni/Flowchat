@@ -21,9 +21,11 @@ const TICK = {
 export function ComparisonChart({
   target,
   baseline,
+  labels,
 }: {
   target: number;
   baseline: number;
+  labels?: [string, string];
 }) {
   const [showDelta, setShowDelta] = useState(false);
   
@@ -34,10 +36,11 @@ export function ComparisonChart({
 
   const delta = target - baseline;
   const isWarmer = delta > 0;
+  const [targetLabel, baselineLabel] = labels ?? ["Queried Period", "Historical Average"];
   
   const rows = [
-    { key: "target", label: "Target", value: target },
-    { key: "baseline", label: "Baseline", value: baseline },
+    { key: "target", label: targetLabel, value: target },
+    { key: "baseline", label: baselineLabel, value: baseline },
   ];
 
   return (
@@ -56,7 +59,7 @@ export function ComparisonChart({
           </defs>
           <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="2 4" horizontal={false} />
           <XAxis type="number" tick={TICK} tickFormatter={(v) => `${v}°C`} stroke="hsl(var(--border))" domain={[0, "dataMax + 2"]} tickLine={false} axisLine={{ stroke: "hsl(var(--border))" }} />
-          <YAxis type="category" dataKey="label" tick={TICK} stroke="hsl(var(--border))" tickLine={false} axisLine={false} width={60} />
+          <YAxis type="category" dataKey="label" tick={TICK} stroke="hsl(var(--border))" tickLine={false} axisLine={false} width={90} />
           <Tooltip content={<ChartTooltip />} cursor={{ fill: "hsl(var(--muted) / 0.1)" }} />
           <Bar dataKey="value" name="Value" radius={[0, 6, 6, 0]} animationDuration={800} barSize={40}>
             {rows.map((r) => (

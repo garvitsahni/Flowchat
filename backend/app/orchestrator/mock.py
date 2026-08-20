@@ -187,6 +187,7 @@ class MockProvider:
                 "during", "changed", "changes", "monthly", "weekly",
                 "over time", "year", "across years", "seasonal", "variation",
                 "increase", "decrease", "risen", "fallen",
+                "average", "avg", "mean",  # implicit time aggregation
             ]
         ) and not self._is_heatmap(q)
 
@@ -554,7 +555,7 @@ ORDER BY f.float_id"""
 
 
 def provider_factory(name: str | None = None) -> LLMProvider:
-    """Return the active provider.
+    """Return the active provider (legacy single-select for backward compat).
 
     A real provider only activates when BOTH LLM_PROVIDER names it AND its API key is
     present (config keys `*_api_key`). Missing key → deterministic mock, so the app
@@ -580,3 +581,36 @@ def provider_factory(name: str | None = None) -> LLMProvider:
 
         return GroqProvider()
     return MockProvider()
+
+
+def provider_chain() -> list[LLMProvider]:
+    """Return an ordered list of providers for failover.
+
+    Order honours LLM_PROVIDER as primary, then remaining real providers by
+    fixed preference (gemini → openrouter → groq), filtered by key presence.
+    MockProvider is always the terminal fallback.
+    """
+    from ..config import settings
+
+    primary = (settings.llm_provider or "").lower()
+    preferred_order = ["gemini", "openrouter", "groq", "nvidia"]
+    # Put primary first if it's in the list, preserve order of rest
+    ordered = [primary] + [p for p in preferred_order if p != primary] if primary in preferred_order else preferred_order
+
+    chain = []
+    for name in ordered:
+        if name == "gemini" and settings.gemini_api_key:
+            from .gemini import GeminiProvider
+            chain.append(GeminiProvider())
+        elif name == "openrouter" and settings.openrouter_api_key:
+            from .openrouter import OpenRouterProvider
+            chain.append(OpenRouterProvider())
+        elif name == "groq" and settings.groq_api_key:
+            from .groq import GroqProvider
+            chain.append(GroqProvider())
+        elif name == "nvidia" and settings.nvidia_api_key:
+            from .nvidia import NvidiaProvider
+            chain.append(NvidiaProvider())
+
+    chain.append(MockProvider())
+    return chain

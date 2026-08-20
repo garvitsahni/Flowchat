@@ -25,11 +25,11 @@ class GeminiProvider(LLMChatProvider):
         from google.genai import Client, types
 
         # Fail fast on capacity errors: cap retries so the app falls back to the mock
-        # provider instead of hanging on Gemini's SDK backoff loop (503 spikes).
+        # provider instead of hanging on Gemini's SDK backoff loop (503/504 spikes).
         client = Client(
             api_key=settings.gemini_api_key,
             http_options={
-                "timeout": 15000,
+                "timeout": 45000,
                 "api_version": "v1",
                 "retry_options": {"attempts": 1},
             },
@@ -44,7 +44,7 @@ class GeminiProvider(LLMChatProvider):
             config=types.GenerateContentConfig(
                 system_instruction=system,
                 temperature=0.2,
-                max_output_tokens=2048,
+                max_output_tokens=4096,
                 response_mime_type="application/json" if json_mode else "text/plain",
             ),
         )

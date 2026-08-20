@@ -140,7 +140,7 @@ def comparison(result: QueryResult) -> dict[str, Any]:
         },
         "meta": {
             "y_axis": "Temperature (°C)",
-            "labels": ["Target Period", "Historical Baseline"],
+            "labels": ["Queried Period", "Historical Average"],
         },
     }
 

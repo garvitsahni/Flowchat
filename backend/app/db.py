@@ -6,18 +6,25 @@ from psycopg_pool import AsyncConnectionPool
 
 from .config import settings
 
-_pool = None
+_pool: AsyncConnectionPool | None = None
+_pool_initialized = False
 
 
-def get_pool() -> AsyncConnectionPool:
-    global _pool
+async def get_pool() -> AsyncConnectionPool:
+    global _pool, _pool_initialized
     if _pool is None:
         _pool = AsyncConnectionPool(
             settings.db_url,
-            min_size=1,
-            max_size=5,
-            kwargs={"row_factory": dict_row},
+            min_size=2,
+            max_size=10,
+            kwargs={"row_factory": dict_row, "connect_timeout": 60},
+            open=False,
+            timeout=120,
+            max_waiting=20,
         )
+    if not _pool_initialized:
+        await _pool.open()
+        _pool_initialized = True
     return _pool
 
 
@@ -29,7 +36,7 @@ async def close_pool() -> None:
 
 
 async def fetch_all(query: str, params: tuple | None = None) -> list[dict]:
-    pool = get_pool()
+    pool = await get_pool()
     async with pool.connection() as conn:
         async with conn.cursor() as cur:
             await cur.execute(query, params)
@@ -39,7 +46,7 @@ async def fetch_all(query: str, params: tuple | None = None) -> list[dict]:
 
 async def ping() -> bool:
     try:
-        pool = get_pool()
+        pool = await get_pool()
         async with pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute("SELECT 1")

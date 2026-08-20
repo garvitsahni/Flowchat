@@ -145,7 +145,11 @@ export function VizPanel({
     const subtitle = `${data.region ?? ""}${data.period ? ` · ${data.period}` : ""}`;
     return (
       <ChartShell title={title} subtitle={subtitle}>
-        <ComparisonChart target={data.target as number} baseline={data.baseline as number} />
+        <ComparisonChart
+          target={data.target as number}
+          baseline={data.baseline as number}
+          labels={data.meta?.labels as [string, string] | undefined}
+        />
       </ChartShell>
     );
   }

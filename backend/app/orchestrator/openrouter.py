@@ -35,14 +35,19 @@ class OpenRouterProvider(LLMChatProvider):
                 "model": settings.openrouter_model,
                 "messages": messages,
                 "temperature": 0.2,
-                "max_tokens": 2048,
+                "max_tokens": 4096,
             },
-            timeout=60.0,
+            timeout=90.0,
         )
         resp.raise_for_status()
         data = resp.json()
         try:
-            return data["choices"][0]["message"]["content"]
+            content = data["choices"][0]["message"]["content"]
+            # Handle OpenRouter content filter responses
+            if content and content.startswith("User Safety:"):
+                logger.warning("OpenRouter content filter triggered: %s", content)
+                return ""
+            return content
         except (KeyError, IndexError, TypeError):
             logger.warning("OpenRouter reply missing choices: %s", data)
             return ""
