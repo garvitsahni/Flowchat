@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Waves } from "lucide-react";
+import { toast } from "sonner";
 import type { Language, QueryResponse } from "../types";
 import { ask } from "../lib/api";
 import { cn } from "../lib/utils";
@@ -31,13 +32,16 @@ const BUBBLE_MOTION = {
 
 export function ChatPanel({
   language,
+  busy,
+  onBusyChange,
   onVizChange,
 }: {
   language: Language;
+  busy: boolean;
+  onBusyChange: (busy: boolean) => void;
   onVizChange: (response: QueryResponse | null) => void;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [busy, setBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -47,7 +51,7 @@ export function ChatPanel({
   async function send(question: string) {
     const text = question.trim();
     if (!text || busy) return;
-    setBusy(true);
+    onBusyChange(true);
     setMessages((m) => [...m, { role: "user", text }]);
     try {
       const response = await ask(text, language);
@@ -56,17 +60,19 @@ export function ChatPanel({
       setMessages((m) => [...m, { role: "system", text: response.answer_text, response, kind }]);
       onVizChange(response);
     } catch (err) {
+      const msg = err instanceof Error ? err.message : "Something went wrong.";
       setMessages((m) => [
         ...m,
         {
           role: "system",
-          text: err instanceof Error ? err.message : "Something went wrong.",
+          text: msg,
           kind: "error",
         },
       ]);
       onVizChange(null);
+      toast.error("Query failed", { description: msg });
     } finally {
-      setBusy(false);
+      onBusyChange(false);
     }
   }
 
