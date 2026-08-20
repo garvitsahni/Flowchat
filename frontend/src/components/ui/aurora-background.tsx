@@ -2,9 +2,9 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const VARIANTS: Record<string, string[]> = {
-  ocean: ["#0f3d52", "#0e6b6b", "#144d63"],
-  ice: ["#16355c", "#2f6a94", "#1d4f6e"],
-  ember: ["#3b2412", "#8a4a2b", "#5a2f1a"],
+  ocean: ["#0a2836", "#0a4a4a", "#0c2f3d"],
+  ice: ["#12253f", "#1f4f70", "#163a52"],
+  ember: ["#2b1a0d", "#6b381f", "#42220f"],
 };
 
 interface Blob {
@@ -51,7 +51,7 @@ export function AuroraBackground({
         className="absolute inset-0"
         style={{
           backgroundImage:
-            "radial-gradient(rgba(174, 174, 178, 0.12) 1px, transparent 1px)",
+            "radial-gradient(rgba(174, 174, 178, 0.08) 1px, transparent 1px)",
           backgroundSize: "28px 28px",
         }}
       />

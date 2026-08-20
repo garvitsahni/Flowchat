@@ -3,27 +3,27 @@
 @tailwind utilities;
 
 :root {
-  --background: 222 44% 6%;
-  --foreground: 210 40% 96%;
-  --card: 222 40% 8%;
-  --card-foreground: 210 40% 96%;
-  --popover: 222 40% 8%;
-  --popover-foreground: 210 40% 96%;
-  --primary: 174 72% 50%;
-  --primary-foreground: 222 47% 7%;
-  --secondary: 220 30% 14%;
-  --secondary-foreground: 210 40% 92%;
-  --muted: 220 28% 12%;
-  --muted-foreground: 215 18% 58%;
-  --accent: 220 30% 14%;
-  --accent-foreground: 210 40% 96%;
+  --background: 0 0% 4%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 8%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 8%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 174 60% 62%;
+  --primary-foreground: 0 0% 6%;
+  --secondary: 0 0% 12%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 11%;
+  --muted-foreground: 0 0% 62%;
+  --accent: 0 0% 12%;
+  --accent-foreground: 0 0% 98%;
   --destructive: 0 62% 55%;
-  --destructive-foreground: 210 40% 96%;
+  --destructive-foreground: 0 0% 98%;
   --warning: 32 95% 64%;
-  --warning-foreground: 222 47% 7%;
-  --border: 220 26% 16%;
-  --input: 220 26% 16%;
-  --ring: 174 72% 50%;
+  --warning-foreground: 0 0% 6%;
+  --border: 0 0% 18%;
+  --input: 0 0% 18%;
+  --ring: 174 60% 62%;
   --radius: 0.625rem;
 }
 
@@ -49,10 +49,10 @@ body {
 @keyframes sonar-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 hsla(174, 72%, 50%, 0.5);
+    box-shadow: 0 0 0 0 hsla(174, 60%, 62%, 0.5);
   }
   50% {
-    box-shadow: 0 0 0 4px hsla(174, 72%, 50%, 0);
+    box-shadow: 0 0 0 4px hsla(174, 60%, 62%, 0);
   }
 }
 
