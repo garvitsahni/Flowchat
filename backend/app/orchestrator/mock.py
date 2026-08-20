@@ -89,6 +89,8 @@ class MockProvider:
             return self._metadata_query(q, language)
         if self._is_depth_profile(q):
             return self._depth_profile(q, language)
+        if self._is_heatmap(q):
+            return self._heatmap(q, language)
         if self._is_time_series(q):
             return self._time_series(q, language)
 
@@ -125,6 +127,8 @@ class MockProvider:
             return self._phrase_depth_profile(rows, result, confidence)
         if rows and "latitude" in rows[0] and "longitude" in rows[0]:
             return self._phrase_trajectory(rows, result)
+        if rows and "month" in rows[0] and "depth_bin" in rows[0]:
+            return self._phrase_heatmap(rows, result, confidence)
         if rows and "month" in rows[0]:
             return self._phrase_time_series(rows, result, confidence)
         if rows and ("target_avg" in rows[0] or "avg_temp_c" in rows[0]):
@@ -178,7 +182,10 @@ class MockProvider:
                 "over time", "year", "across years", "seasonal", "variation",
                 "increase", "decrease", "risen", "fallen",
             ]
-        )
+        ) and not self._is_heatmap(q)
+
+    def _is_heatmap(self, q: str) -> bool:
+        return any(t in q for t in ["heatmap", "heat map"])
 
     def _is_metadata(self, q: str) -> bool:
         return any(
@@ -367,6 +374,35 @@ ORDER BY month"""
             requested_region=region,
         )
 
+    def _heatmap(self, q: str, language: str) -> GeneratedSQL:
+        region, is_city = self._extract_region(q)
+        period_filter, label = self._period_from(q)
+        param = self._detect_parameter(q)
+        alias = "avg_salinity" if "salinity" in param else "avg_temp"
+        where = self._where(region, is_city, period_filter)
+        if not where:
+            where = "m.is_valid = true"
+        else:
+            where = f"{where}\n  AND m.is_valid = true"
+        sql = f"""
+SELECT DATE_TRUNC('month', p.profile_date) AS month,
+       FLOOR(m.depth_m / 20) * 20 AS depth_bin,
+       AVG({param}) AS {alias}
+FROM argo_measurements m
+JOIN argo_profiles p ON m.profile_id = p.profile_id
+WHERE {where}
+GROUP BY month, depth_bin
+ORDER BY month, depth_bin"""
+        param_label = "salinity" if "salinity" in param else "temperature"
+        return GeneratedSQL(
+            sql=sql,
+            intent_type="heatmap",
+            language=language,
+            explanation=f"Depth vs Time {param_label} heatmap for '{region or 'Indian Ocean'}'.",
+            requested_period=label,
+            requested_region=region,
+        )
+
     def _comparison(self, q: str, language: str) -> GeneratedSQL:
         region, is_city = self._extract_region(q)
         if is_city or not region:
@@ -501,6 +537,14 @@ ORDER BY f.float_id"""
             f"{region} was {abs(delta):.1f}°C {direction} than the "
             f"historical average for this period ({target:.1f}°C vs {baseline:.1f}°C).{note}"
         )
+
+    def _phrase_heatmap(self, rows: list[dict], result: QueryResult, confidence: str) -> str:
+        if not rows:
+            return "No data available for this region and time period."
+        key = "avg_temp" if "avg_temp" in rows[0] else "avg_salinity"
+        label = "temperature" if key == "avg_temp" else "salinity"
+        note = f" Limited float coverage." if confidence == "low" else ""
+        return f"Heatmap showing {label} variation over depth and time in {result.region or 'this region'}.{note}"
 
 
 def provider_factory(name: str | None = None) -> LLMProvider:

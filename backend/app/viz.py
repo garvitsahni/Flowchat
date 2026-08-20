@@ -58,6 +58,15 @@ def comparison(result: QueryResult) -> dict:
     }
 
 
+def heatmap(result: QueryResult) -> dict:
+    rows = result.rows
+    return {
+        "type": "heatmap",
+        "rows": rows,
+        "region": result.region,
+        "period": result.period,
+    }
+
 def shape(result: QueryResult, chart_type: str) -> dict:
     if chart_type == "depth_profile":
         return depth_profile(result)
@@ -67,4 +76,6 @@ def shape(result: QueryResult, chart_type: str) -> dict:
         return time_series(result)
     if chart_type == "comparison":
         return comparison(result)
+    if chart_type == "heatmap":
+        return heatmap(result)
     return {}

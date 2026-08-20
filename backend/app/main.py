@@ -190,7 +190,7 @@ async def query(req: QueryRequest) -> QueryResponse:
         answer_text=answer_text,
         language=req.language,
         chart_type=generated.intent_type if generated.intent_type in {
-            "depth_profile", "trajectory", "time_series", "comparison",
+            "depth_profile", "trajectory", "time_series", "comparison", "heatmap",
         } else "none",
         chart_data=viz.shape(result, generated.intent_type),
         confidence=confidence.confidence,

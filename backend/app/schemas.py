@@ -21,7 +21,7 @@ class Explainability(BaseModel):
     time_range_queried: str = ""
 
 
-ChartType = Literal["depth_profile", "trajectory", "time_series", "comparison", "none"]
+ChartType = Literal["depth_profile", "trajectory", "time_series", "comparison", "heatmap", "none"]
 Confidence = Literal["high", "low"]
 
 

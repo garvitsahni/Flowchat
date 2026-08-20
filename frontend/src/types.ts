@@ -4,6 +4,7 @@ export type ChartType =
   | "trajectory"
   | "time_series"
   | "comparison"
+  | "heatmap"
   | "none";
 export type Confidence = "high" | "low";
 export type RefusalReason = "" | "out_of_scope" | "no_data" | "unsafe";

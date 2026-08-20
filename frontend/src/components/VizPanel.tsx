@@ -6,6 +6,7 @@ import { TrajectoryMap } from "./TrajectoryMap";
 import { DepthProfileChart } from "./charts/DepthProfileChart";
 import { ComparisonChart } from "./charts/ComparisonChart";
 import { ScientificChart } from "./charts/ScientificChart";
+import { HeatmapChart } from "./charts/HeatmapChart";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function VizPanel({
@@ -88,6 +89,16 @@ export function VizPanel({
 
   if (type === "time_series") {
     return <ScientificChart key={response as unknown as string} response={response} />;
+  }
+
+  if (type === "heatmap") {
+    const title = "heatmap";
+    const subtitle = `${data.region as string}${data.period ? ` · ${data.period as string}` : ""}`;
+    return (
+      <ChartShell title={title} subtitle={subtitle}>
+        <HeatmapChart data={data.rows as any[]} />
+      </ChartShell>
+    );
   }
 
   const title = type === "depth_profile" ? "depth profile" : "comparison";

@@ -100,7 +100,7 @@ Rules:
   and (2) reference the precomputed regional_monthly_avg table for baseline comparison
   rather than computing a multi-year average from raw rows.
 - Return output as JSON: {"sql": "...", "intent_type": "depth_profile|trajectory|
-  time_series|comparison|metadata|unsupported", "explanation": "one sentence, plain language"}
+  time_series|comparison|heatmap|metadata|unsupported", "explanation": "one sentence, plain language"}
 - If the question cannot be answered from this schema, return
   {"sql": null, "intent_type": "unsupported", "explanation": "..."}
 
@@ -287,7 +287,23 @@ WHERE region = 'Bay of Bengal' AND year_month LIKE '%-02';
 ```
 `intent_type: "comparison"`
 
-**14. Metadata — float status**
+**14. Heatmap — depth vs time**
+> Q: "Show me a temperature heatmap of the Arabian Sea since 2002"
+```sql
+SELECT DATE_TRUNC('month', p.profile_date) AS month,
+       FLOOR(m.depth_m / 20) * 20 AS depth_bin,
+       AVG(m.temperature_c) AS avg_temp
+FROM argo_measurements m
+JOIN argo_profiles p ON m.profile_id = p.profile_id
+WHERE p.region = 'Arabian Sea'
+  AND p.profile_date >= '2002-01-01'
+  AND m.is_valid = true
+GROUP BY month, depth_bin
+ORDER BY month, depth_bin;
+```
+`intent_type: "heatmap"`
+
+**15. Metadata — float status**
 > Q: "Is float 2900226 still reporting?"
 ```sql
 SELECT float_id, deploy_date, deploy_lat, deploy_lon, status
