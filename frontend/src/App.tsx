@@ -36,7 +36,7 @@ export default function App() {
       </header>
 
       <main className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        <section className="min-h-0 flex-1 lg:border-r lg:border-current-500/30">
+        <section className="min-h-0 flex-1 lg:border-r lg:border-border">
           <ChatPanel
             language={language}
             onLanguageChange={setLanguage}
@@ -44,7 +44,7 @@ export default function App() {
           />
         </section>
 
-        <aside className="min-h-0 flex-1 border-t border-current-500/30 p-4 lg:border-l lg:border-t-0">
+        <aside className="min-h-0 flex-1 border-t border-border p-4 lg:border-l lg:border-t-0">
           <VizPanel response={viz} />
         </aside>
       </main>
