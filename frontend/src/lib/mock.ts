@@ -61,9 +61,9 @@ const TRAJECTORY: QueryResponse = {
   },
 };
 
-const TIME_SERIES: QueryResponse = {
+export const TIME_SERIES: QueryResponse = {
   answer_text:
-    "Temperature in Bay of Bengal rose from 20.7°C (2003-01) to 27.4°C (2003-08). Limited float coverage.",
+    "Temperature in Bay of Bengal rose from 20.7°C (2003-01) to 27.4°C (2003-08).",
   language: "en",
   chart_type: "time_series",
   chart_data: {
