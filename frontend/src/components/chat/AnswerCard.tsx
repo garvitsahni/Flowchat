@@ -1,0 +1,59 @@
+import type { QueryResponse } from "../../types";
+import { getRegionContext } from "../../lib/demo";
+import { ConfidenceBadge } from "./ConfidenceBadge";
+import { DataContext } from "./DataContext";
+import { EvidencePanel } from "./EvidencePanel";
+
+function calcLabel(response: QueryResponse): string {
+  switch (response.chart_type) {
+    case "time_series": return "monthly mean of temperature over valid readings";
+    case "depth_profile": return "mean over all valid depth levels";
+    case "comparison": return "annual mean vs baseline";
+    case "trajectory": return "surface position tracking";
+    default: return "aggregation over valid readings";
+  }
+}
+
+function highlightNumbers(text: string): (string | JSX.Element)[] {
+  return text.split(/(\d+(?:\.\d+)?(?:\u00B0C|%| PSU| dbar| \u00B5mol\/kg)?)/g).map((part, i) =>
+    /\d/.test(part) ? (
+      <span key={i} className="font-semibold text-primary">{part}</span>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
+}
+
+export function AnswerCard({ text, response }: { text: string; response: QueryResponse }) {
+  const region = (response.chart_data.region as string | undefined) ?? undefined;
+  const months = response.chart_data.months as string[] | undefined;
+  const period =
+    (response.chart_data.period as string | undefined) ??
+    (months && months.length >= 2 ? `${months[0]} \u2192 ${months[months.length - 1]}` : undefined);
+  const ctx = getRegionContext(region ?? "");
+  return (
+    <article className="w-full max-w-[92%]">
+      <div className="border border-border bg-[#111313]">
+        <p className="px-3.5 py-3 text-[15px] leading-relaxed text-foreground">{highlightNumbers(text)}</p>
+        <div className="px-3.5 pb-3">
+          <ConfidenceBadge confidence={response.confidence} note={response.confidence_note} />
+        </div>
+        <div className="border-t border-border px-3.5 py-2.5">
+          <DataContext
+            region={region}
+            period={period}
+            observations={ctx?.observations}
+            quality={ctx?.quality}
+          />
+          <EvidencePanel
+            info={response.explainability}
+            region={region}
+            observations={ctx?.observations}
+            quality={ctx?.quality}
+            calculation={calcLabel(response)}
+          />
+        </div>
+      </div>
+    </article>
+  );
+}
