@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { SendHorizonal, Waves } from "lucide-react";
 import type { Language, QueryResponse } from "../types";
 import { ask } from "../lib/api";
-import { cn } from "../lib/cn";
+import { cn } from "../lib/utils";
+import { LanguageToggle } from "./LanguageToggle";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { ExplainabilityDrawer } from "./ExplainabilityDrawer";
+import { TypingIndicator } from "@/components/ui/typing-indicator";
 
 interface Message {
   role: "user" | "system";
@@ -19,6 +23,12 @@ const SUGGESTIONS = [
   "Was March 2003 unusually warm in the Bay of Bengal?",
   "बंगाल की खाड़ी में 2003 में तापमान कैसे बदला?",
 ];
+
+const BUBBLE_MOTION = {
+  initial: { opacity: 0, y: 10, scale: 0.98 },
+  animate: { opacity: 1, y: 0, scale: 1 },
+  transition: { duration: 0.3, ease: "easeOut" as const },
+};
 
 export function ChatPanel({
   language,
@@ -84,99 +94,87 @@ export function ChatPanel({
     <div className="flex h-full flex-col">
       <div ref={scrollRef} className="flex-1 space-y-5 overflow-y-auto px-1 py-4">
         {empty ? (
-          <div className="flex h-full flex-col items-center justify-center px-2 text-center">
-            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-bio-400/30 bg-abyss-800/80">
-              <SonarIcon />
-            </div>
-            <p className="font-mono text-[15px] text-foam-200">Ask about the Indian Ocean float data.</p>
-            <p className="mt-1 font-mono text-xs text-current-300">
-              Live dataset: float 2900226 · Bay of Bengal · Oct 2002 – Aug 2004 · 125 profiles
-            </p>
-            <div className="mx-auto mt-5 flex max-w-lg flex-wrap justify-center gap-2">
-              {SUGGESTIONS.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => void send(s)}
-                  disabled={busy}
-                  className="rounded-full border border-current-500/50 bg-abyss-800/60 px-4 py-2 text-[14px] text-foam-200 transition-colors hover:border-bio-400/70 hover:text-foam-50 disabled:opacity-50"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
+          <EmptyState onSuggest={send} busy={busy} />
         ) : (
           <>
-            {messages.map((msg, i) =>
-              msg.role === "user" ? (
-                <div key={i} className="flex justify-end">
-                  <div className="max-w-[80%] rounded-2xl rounded-br-sm border border-current-500 bg-current-500/70 px-4 py-2.5 text-[15px] leading-relaxed text-foam-50">
-                    {msg.text}
-                  </div>
-                </div>
-              ) : (
-                <div key={i} className="flex justify-start">
-                  <div
-                    className={cn(
-                      "max-w-[85%] rounded-2xl rounded-bl-sm border-l-2 bg-abyss-800 px-4 py-2.5",
-                      msg.kind === "error"
-                        ? "border-flag-500"
-                        : msg.kind === "refusal"
-                          ? "border-scan-500"
-                          : "border-bio-400"
-                    )}
-                  >
-                    <p
+            <AnimatePresence initial={false}>
+              {messages.map((msg, i) => (
+                <motion.div
+                  key={i}
+                  {...BUBBLE_MOTION}
+                  className={msg.role === "user" ? "flex justify-end" : "flex justify-start"}
+                >
+                  {msg.role === "user" ? (
+                    <div className="max-w-[80%] rounded-2xl rounded-br-sm border border-border bg-primary/90 px-4 py-2.5 text-[15px] leading-relaxed text-primary-foreground">
+                      {msg.text}
+                    </div>
+                  ) : (
+                    <div
                       className={cn(
-                        "text-[15px] leading-relaxed text-foam-50",
-                        msg.kind === "error" && "font-mono text-[14px] text-flag-500"
+                        "max-w-[85%] rounded-2xl rounded-bl-sm border-l-2 bg-card px-4 py-2.5 shadow-sm",
+                        msg.kind === "error"
+                          ? "border-destructive"
+                          : msg.kind === "refusal"
+                            ? "border-warning"
+                            : "border-primary"
                       )}
                     >
-                      {msg.text}
-                    </p>
-                    {msg.kind === "refusal" && (
-                      <div className="mt-1.5 font-mono text-xs uppercase tracking-widest text-scan-500">
-                        {msg.response?.refusal_reason === "no_data"
-                          ? "no data in scope"
-                          : msg.response?.refusal_reason === "unsafe"
-                            ? "couldn't answer safely"
-                            : "out of scope"}
-                      </div>
-                    )}
-                    {msg.response && msg.kind !== "refusal" && (
-                      <div className="mt-2 flex items-center gap-3">
-                        <ConfidenceBadge
+                      <p
+                        className={cn(
+                          "text-[15px] leading-relaxed text-foreground",
+                          msg.kind === "error" && "font-mono text-[14px] text-destructive"
+                        )}
+                      >
+                        {msg.text}
+                      </p>
+                      {msg.kind === "refusal" && (
+                        <div className="mt-1.5 font-mono text-xs uppercase tracking-widest text-warning">
+                          {msg.response?.refusal_reason === "no_data"
+                            ? "no data in scope"
+                            : msg.response?.refusal_reason === "unsafe"
+                              ? "couldn't answer safely"
+                              : "out of scope"}
+                        </div>
+                      )}
+                      {msg.response && msg.kind !== "refusal" && (
+                        <div className="mt-2 flex items-center gap-3">
+                          <ConfidenceBadge
+                            confidence={msg.response.confidence}
+                            note={msg.response.confidence_note}
+                          />
+                        </div>
+                      )}
+                      {msg.response && msg.kind !== "refusal" && (
+                        <ExplainabilityDrawer
+                          info={msg.response.explainability}
                           confidence={msg.response.confidence}
-                          note={msg.response.confidence_note}
                         />
-                      </div>
-                    )}
-                    {msg.response && msg.kind !== "refusal" && (
-                      <ExplainabilityDrawer
-                        info={msg.response.explainability}
-                        confidence={msg.response.confidence}
-                      />
-                    )}
-                  </div>
-                </div>
-              )
-            )}
+                      )}
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </AnimatePresence>
 
             {busy && (
-              <div className="flex justify-start">
-                <div className="rounded-2xl rounded-bl-sm border-l-2 border-bio-400 bg-abyss-800 px-4 py-3">
-                  <div className="sonar-sweep h-4 w-24" aria-label="thinking" />
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="flex justify-start"
+              >
+                <div className="rounded-2xl rounded-bl-sm border-l-2 border-primary bg-card px-4 py-3 shadow-sm">
+                  <TypingIndicator />
                 </div>
-              </div>
+              </motion.div>
             )}
           </>
         )}
       </div>
 
-      <div className="border-t border-current-500/30 pt-3">
+      <div className="border-t border-border pt-3">
         <form onSubmit={onSubmit}>
-          <div className="cursor-text rounded-2xl border border-current-500/50 bg-abyss-800 shadow-[0_0_15px_rgba(0,0,0,0.4)] transition-shadow focus-within:border-bio-400/70 focus-within:shadow-[0_0_0_1px_rgba(217,119,87,0.4),0_0_20px_rgba(217,119,87,0.15)]">
+          <div className="cursor-text rounded-2xl border border-input bg-card shadow-lg transition-all focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-ring">
             <textarea
               ref={textareaRef}
               value={input}
@@ -190,25 +188,26 @@ export function ChatPanel({
               placeholder="Ask about floats, regions, or measurements…"
               disabled={busy}
               rows={1}
-              className="w-full resize-none overflow-hidden bg-transparent px-4 pb-0 pt-3.5 text-[15px] leading-[1.6] text-foam-50 outline-none placeholder:text-foam-200/40 disabled:opacity-60"
+              className="w-full resize-none overflow-hidden bg-transparent px-4 pb-0 pt-3.5 text-[15px] leading-[1.6] text-foreground outline-none placeholder:text-muted-foreground/40 disabled:opacity-60"
             />
             <div className="flex items-center justify-between gap-3 px-2 pb-2">
               <div className="flex items-center gap-1 pl-1.5">
                 <LanguageToggle language={language} onChange={onLanguageChange} />
               </div>
-              <button
+              <motion.button
                 type="submit"
                 disabled={busy || !input.trim()}
                 aria-label="Send message"
+                whileTap={{ scale: 0.9 }}
                 className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full transition-all duration-150",
+                  "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
                   input.trim() && !busy
-                    ? "bg-bio-400 text-abyss-950 shadow-[0_0_12px_rgba(217,119,87,0.4)] hover:bg-bio-300"
-                    : "bg-abyss-900 text-foam-200/40"
+                    ? "bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)_/_0.4)] hover:bg-primary/80"
+                    : "bg-muted text-muted-foreground/40"
                 )}
               >
-                <SendIcon />
-              </button>
+                <SendHorizonal size={15} />
+              </motion.button>
             </div>
           </div>
         </form>
@@ -217,58 +216,43 @@ export function ChatPanel({
   );
 }
 
-function LanguageToggle({
-  language,
-  onChange,
+function EmptyState({
+  onSuggest,
+  busy,
 }: {
-  language: Language;
-  onChange: (lang: Language) => void;
+  onSuggest: (question: string) => void;
+  busy: boolean;
 }) {
   return (
-    <div className="flex overflow-hidden rounded-full border border-current-500/50">
-      {(["en", "hi"] as Language[]).map((lang) => (
-        <button
-          key={lang}
-          type="button"
-          onClick={() => onChange(lang)}
-          className={cn(
-            "px-2.5 py-1 font-mono text-xs transition-colors",
-            language === lang
-              ? "bg-bio-400/15 text-bio-400"
-              : "text-foam-200/60 hover:text-foam-50"
-          )}
-        >
-          {lang === "en" ? "EN" : "हिं"}
-        </button>
-      ))}
+    <div className="flex h-full flex-col items-center justify-center px-2 text-center">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-primary/30 bg-card"
+      >
+        <Waves className="text-primary" size={26} strokeWidth={1.5} />
+      </motion.div>
+      <p className="font-mono text-[15px] text-muted-foreground">Ask about the Indian Ocean float data.</p>
+      <p className="mt-1 font-mono text-xs text-muted-foreground/70">
+        Live dataset: float 2900226 · Bay of Bengal · Oct 2002 – Aug 2004 · 125 profiles
+      </p>
+      <div className="mx-auto mt-5 flex max-w-lg flex-wrap justify-center gap-2">
+        {SUGGESTIONS.map((s, i) => (
+          <motion.button
+            key={s}
+            type="button"
+            onClick={() => onSuggest(s)}
+            disabled={busy}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 + i * 0.08, ease: "easeOut" }}
+            className="rounded-full border border-border bg-card px-4 py-2 text-[14px] text-muted-foreground transition-colors hover:border-primary/70 hover:text-foreground disabled:opacity-50"
+          >
+            {s}
+          </motion.button>
+        ))}
+      </div>
     </div>
-  );
-}
-
-function SendIcon() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 19V5" />
-      <polyline points="5 12 12 5 19 12" />
-    </svg>
-  );
-}
-
-function SonarIcon() {
-  return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <circle cx="12" cy="12" r="2" className="text-bio-400" />
-      <circle cx="12" cy="12" r="7" className="text-bio-400/50" />
-      <circle cx="12" cy="12" r="11" className="text-bio-400/25" />
-    </svg>
   );
 }
