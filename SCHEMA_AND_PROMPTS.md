@@ -26,7 +26,8 @@ CREATE TABLE argo_profiles (
     latitude          DOUBLE PRECISION,
     longitude         DOUBLE PRECISION,
     location          GEOGRAPHY(POINT, 4326),  -- PostGIS point, derived from lat/lon
-    region            VARCHAR(50)               -- precomputed label, e.g. 'Arabian Sea'
+    region            VARCHAR(50),              -- precomputed label, e.g. 'Arabian Sea'
+    UNIQUE (float_id, cycle_number)             -- natural key: re-ingest must be idempotent
 );
 CREATE INDEX idx_profiles_location ON argo_profiles USING GIST(location);
 CREATE INDEX idx_profiles_date ON argo_profiles(profile_date);

@@ -165,7 +165,7 @@ def ingest_float(float_id: str, dac: str = "incois", clean: bool = False) -> dic
                     """INSERT INTO argo_profiles
                        (float_id, cycle_number, profile_date, latitude, longitude, location, region)
                        VALUES (%s, %s, %s, %s, %s, ST_SetSRID(ST_MakePoint(%s, %s), 4326), %s)
-                       ON CONFLICT DO NOTHING
+                       ON CONFLICT (float_id, cycle_number) DO NOTHING
                        RETURNING profile_id""",
                     (float_id, int(cycle), when, lat, lon, lon, lat, region),
                 )
@@ -181,6 +181,15 @@ def ingest_float(float_id: str, dac: str = "incois", clean: bool = False) -> dic
                         continue
                 profile_id = row[0]
                 profile_count += 1
+
+                # Idempotency: drop any measurements previously written for this
+                # profile before re-inserting, so a re-run produces an identical
+                # DB state (no unique value key exists — Argo profiles legitimately
+                # repeat pressure levels).
+                cur.execute(
+                    "DELETE FROM argo_measurements WHERE profile_id = %s",
+                    (profile_id,),
+                )
 
                 for k in range(pres.shape[1]):
                     pval = _as_float(pres[i, k])
