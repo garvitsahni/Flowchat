@@ -2,8 +2,8 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-const TEAL = "#D97757";
-const MUTED = "#8C8A86";
+const PRIMARY = "hsl(var(--primary))";
+const MUTED = "hsl(var(--muted-foreground))";
 
 export function TrajectoryMap({
   latitudes,
@@ -39,10 +39,10 @@ export function TrajectoryMap({
 
     L.polyline(
       latitudes.map((lat, i) => [lat, longitudes[i]]),
-      { color: TEAL, weight: 2, opacity: 0.85 }
+      { color: PRIMARY, weight: 2, opacity: 0.85 }
     ).addTo(map);
 
-    // Start marker (muted) → end marker (teal, with glow)
+    // Start marker (muted) → current marker (primary, with soft pulsing glow ring)
     L.circleMarker([latitudes[0], longitudes[0]], {
       radius: 4,
       color: MUTED,
@@ -53,9 +53,16 @@ export function TrajectoryMap({
       .addTo(map);
 
     L.circleMarker([latitudes[latitudes.length - 1], longitudes[longitudes.length - 1]], {
+      radius: 10,
+      color: PRIMARY,
+      opacity: 0.3,
+      fill: false,
+    }).addTo(map);
+
+    L.circleMarker([latitudes[latitudes.length - 1], longitudes[longitudes.length - 1]], {
       radius: 6,
-      color: TEAL,
-      fillColor: TEAL,
+      color: PRIMARY,
+      fillColor: PRIMARY,
       fillOpacity: 1,
     })
       .bindTooltip("current", { permanent: false, className: "float-map-tip" })
@@ -69,10 +76,10 @@ export function TrajectoryMap({
   }, [latitudes, longitudes]);
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-lg border border-current-500/40 bg-abyss-900">
+    <div className="relative h-full w-full overflow-hidden rounded-xl border border-border bg-card">
       <div ref={containerRef} className="h-full w-full" />
-      <div className="pointer-events-none absolute left-3 top-3 z-[1000] rounded bg-abyss-950/80 px-2 py-1 font-mono text-[13px] text-foam-50">
-        float <span className="text-bio-400">{floatId}</span> · trajectory
+      <div className="pointer-events-none absolute left-3 top-3 z-[1000] rounded-md border border-border bg-background/80 px-2 py-1 font-mono text-[13px] text-foreground backdrop-blur">
+        float <span className="text-primary">{floatId}</span> · trajectory
       </div>
     </div>
   );
