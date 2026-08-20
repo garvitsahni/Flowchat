@@ -67,7 +67,8 @@ Exact HSL values to be finalized during implementation and tuned visually agains
 - Logo: `FloatChat` wordmark, mono, primary accent on "Chat".
 - Subtitle: `DEEP-SEA INSTRUMENT PANEL · INDIAN OCEAN`.
 - LIVE badge: pulsing dot + `LIVE · float 2900226`.
-- EN/HI language control: animated segmented control with sliding thumb.
+- Current-language readout (`en · english` / `hi · हिन्दी`), mono, muted — display only.
+  The interactive EN/HI control lives in the composer (§3.3), matching today.
 
 ### 3.3 Chat panel (`ChatPanel.tsx`)
 - Message list: staggered motion entrances (smooth 300–400ms ease-out; no bouncy).
@@ -75,7 +76,8 @@ Exact HSL values to be finalized during implementation and tuned visually agains
 - System bubble: elevated surface, primary-accent left border, left aligned (still
   signals "grounded data").
 - Composer: auto-growing textarea, animated send button with micro-interaction, EN/HI
-  segmented control inline.
+  animated segmented control (sliding thumb) inline — the single interactive language
+  control.
 - Empty state: animated sonar mark, one-line instruction, dataset stats, suggestion chips.
 - Loading: **animated typing indicator** replacing the sonar-sweep bar.
 
