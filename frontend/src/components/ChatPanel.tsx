@@ -3,17 +3,9 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import type { Language, QueryResponse } from "../types";
 import { ask } from "../lib/api";
-import { TIME_SERIES } from "../lib/mock";
 import { ChatMessage, type Message } from "./chat/ChatMessage";
 import { CommandInput } from "./chat/CommandInput";
 import { TypingIndicator } from "@/components/ui/typing-indicator";
-
-const EXAMPLE_QUESTION = "How did temperature change in the Bay of Bengal in 2003?";
-
-const SEED: Message[] = [
-  { role: "user", text: EXAMPLE_QUESTION },
-  { role: "system", text: TIME_SERIES.answer_text, response: TIME_SERIES },
-];
 
 export function ChatPanel({
   language,
@@ -26,7 +18,7 @@ export function ChatPanel({
   onBusyChange: (busy: boolean) => void;
   onVizChange: (response: QueryResponse | null) => void;
 }) {
-  const [messages, setMessages] = useState<Message[]>(SEED);
+  const [messages, setMessages] = useState<Message[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,6 +49,13 @@ export function ChatPanel({
   return (
     <div className="flex h-full flex-col gap-3 p-3 lg:p-4">
       <div ref={scrollRef} className="min-h-0 flex-1 space-y-6 overflow-y-auto py-1 pr-1">
+        {messages.length === 0 && !busy && (
+          <div className="flex min-h-full items-center justify-center">
+            <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground/50">
+              no queries yet — ask about floats, regions, or measurements
+            </p>
+          </div>
+        )}
         {messages.map((msg, i) => (
           <ChatMessage key={i} message={msg} onRelated={send} />
         ))}

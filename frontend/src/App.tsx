@@ -5,11 +5,10 @@ import { VizPanel } from "./components/VizPanel";
 import { Header } from "./components/Header";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { TIME_SERIES } from "./lib/mock";
 
 export default function App() {
   const [language, setLanguage] = useState<Language>("en");
-  const [viz, setViz] = useState<QueryResponse | null>(() => TIME_SERIES);
+  const [viz, setViz] = useState<QueryResponse | null>(null);
   const [busy, setBusy] = useState(false);
 
   return (

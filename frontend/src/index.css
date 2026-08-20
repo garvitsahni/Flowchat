@@ -60,6 +60,20 @@ body {
   animation: sonar-pulse 2s ease-out infinite;
 }
 
+/* Chart Animations */
+@keyframes chart-line-draw {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.chart-gradient-glow {
+  filter: drop-shadow(0 0 6px var(--glow-color, hsla(174, 60%, 62%, 0.4)));
+}
+
 /* Leaflet tooltip on dark */
 .float-map-tip {
   background: hsl(var(--card)) !important;

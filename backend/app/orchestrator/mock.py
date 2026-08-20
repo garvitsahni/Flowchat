@@ -38,6 +38,13 @@ OUT_OF_SCOPE = [
     "europe", "usa", "america", "united states", "england", "france", "spain",
 ]
 
+# Parameters the schema does NOT support — question asks for these → graceful refusal.
+UNSUPPORTED_PARAMS = [
+    "oxygen", "dissolved oxygen", "do level", "ph ", "ph level",
+    "nitrate", "phosphate", "chlorophyll", "silicate", "current",
+    "wave", "tide", "wind", "precipitation", "rainfall",
+]
+
 
 class MockProvider:
     """Deterministic rule-based provider. Name kept snake_case-able for settings."""
@@ -57,6 +64,19 @@ class MockProvider:
                 explanation="This dataset covers the Indian Ocean region only.",
             )
 
+        # Check if the question asks for a parameter not in our schema
+        unsupported_param = self._asks_unsupported_param(q)
+        if unsupported_param:
+            return GeneratedSQL(
+                sql=None,
+                intent_type="unsupported",
+                language=language,
+                explanation=(
+                    f"The ARGO float dataset does not include {unsupported_param} data. "
+                    f"Available measurements are temperature and salinity."
+                ),
+            )
+
         float_id = self._extract_float_id(question)
 
         if float_id and self._is_trajectory(q):
@@ -65,13 +85,33 @@ class MockProvider:
             return self._comparison(q, language)
         if float_id:
             return self._float_profile(q, float_id, language)
+        if self._is_metadata(q):
+            return self._metadata_query(q, language)
         if self._is_depth_profile(q):
             return self._depth_profile(q, language)
         if self._is_time_series(q):
             return self._time_series(q, language)
 
-        # Default fallback: depth/time-series style query near a known anchor
-        return self._depth_profile(q, language)
+        # Context-aware default: if a year/period is mentioned, treat as time_series;
+        # if only a region, treat as depth_profile.
+        _, period_label = self._period_from(q)
+        region, _ = self._extract_region(q)
+        if period_label:
+            return self._time_series(q, language)
+        if region:
+            return self._depth_profile(q, language)
+
+        # Truly unrecognized — return a helpful message instead of a blind query
+        return GeneratedSQL(
+            sql=None,
+            intent_type="unsupported",
+            language=language,
+            explanation=(
+                "I couldn't determine what data you're looking for. "
+                "Try asking about temperature or salinity in a specific region "
+                "(e.g., Bay of Bengal, Arabian Sea) and time period."
+            ),
+        )
 
     def phrase_answer(self, result: QueryResult, confidence: str, language: str = "en") -> str:
         """Deterministic phrasing pass (1 decimal, no invented numbers)."""
@@ -96,16 +136,27 @@ class MockProvider:
     def _is_out_of_scope(self, q: str) -> bool:
         return any(t in q for t in OUT_OF_SCOPE)
 
+    def _asks_unsupported_param(self, q: str) -> str | None:
+        """Return the unsupported parameter name if the question asks for one."""
+        for param in UNSUPPORTED_PARAMS:
+            if param in q:
+                return param.strip()
+        return None
+
     def _is_trajectory(self, q: str) -> bool:
-        return any(t in q for t in ["trajectory", "path", "track", "route", "travel", "moved", "where did"])
+        return any(t in q for t in [
+            "trajectory", "path", "track", "route", "travel", "moved",
+            "where did", "where has", "traveled", "travelled",
+        ])
 
     def _is_comparison(self, q: str) -> bool:
         return any(
             t in q
             for t in [
                 "compare", "comparison", "vs", "versus", "unusually", "warmer than",
-                "colder than", "anomaly", "anomalous", "normal", "average", "saline",
-                "salinity compare",
+                "colder than", "anomaly", "anomalous", "normal",
+                "saline", "salinity compare",
+                "hotter than", "cooler than", "higher than", "lower than",
             ]
         )
 
@@ -114,7 +165,7 @@ class MockProvider:
             t in q
             for t in [
                 "depth", "profile", "at 500", "at 100", "temperature at", "salinity at",
-                "different depths", "vertical",
+                "different depths", "vertical", "surface", "thermocline",
             ]
         ) or bool(DEPTH_RE.search(q))
 
@@ -124,6 +175,18 @@ class MockProvider:
             for t in [
                 "time series", "trend", "over", "how has", "how did", "since",
                 "during", "changed", "changes", "monthly", "weekly",
+                "over time", "year", "across years", "seasonal", "variation",
+                "increase", "decrease", "risen", "fallen",
+            ]
+        )
+
+    def _is_metadata(self, q: str) -> bool:
+        return any(
+            t in q
+            for t in [
+                "active float", "how many float", "which float", "list float",
+                "float status", "deployed", "still reporting", "data quality",
+                "qc", "quality check", "how many readings",
             ]
         )
 
@@ -135,12 +198,20 @@ class MockProvider:
 
     def _extract_region(self, q: str) -> tuple[str, bool]:
         """Return (region_label_or_city_key, is_city). City → ST_DWithin anchor."""
-        if "arabian sea" in q:
+        if "arabian sea" in q or "arabian" in q:
             return "Arabian Sea", False
-        if "bay of bengal" in q or "bengal" in q:
+        if (
+            "bengal" in q
+            or "bay of bangla" in q
+            or "bangla" in q
+            or "bangal" in q
+            or "बंगाल" in q
+        ):
             return "Bay of Bengal", False
         if "andaman" in q:
             return "Andaman Sea", False
+        if "indian ocean" in q:
+            return "", False  # no region filter = whole dataset
         for city, (lat, lon, radius) in CITY_ANCHORS.items():
             if city in q:
                 return city, True
@@ -247,19 +318,24 @@ ORDER BY m.depth_m"""
             depth_filter = (
                 f"ABS(m.depth_m - {depth}) < 50"  # nearest bin ±50m
             )
+        param = self._detect_parameter(q)
         where = self._where(region, is_city, period_filter, extra=depth_filter)
+        if not where:
+            where = "m.is_valid = true"
+        else:
+            where = f"{where}\n  AND m.is_valid = true"
         sql = f"""
 SELECT m.depth_m, m.temperature_c, m.salinity_psu
 FROM argo_measurements m
 JOIN argo_profiles p ON m.profile_id = p.profile_id
 WHERE {where}
-  AND m.is_valid = true
 ORDER BY m.depth_m"""
+        param_label = "salinity" if param == "m.salinity_psu" else "temperature"
         return GeneratedSQL(
             sql=sql,
             intent_type="depth_profile",
             language=language,
-            explanation=f"Depth profile near '{region or 'Indian Ocean'}'.{' Depth ~' + str(m.group(1)) + 'm.' if m else ''}",
+            explanation=f"{param_label.capitalize()} depth profile near '{region or 'Indian Ocean'}'.{' Depth ~' + str(m.group(1)) + 'm.' if m else ''}",
             requested_period=label,
             requested_region=region,
         )
@@ -267,22 +343,26 @@ ORDER BY m.depth_m"""
     def _time_series(self, q: str, language: str) -> GeneratedSQL:
         region, is_city = self._extract_region(q)
         period_filter, label = self._period_from(q)
-        param = "m.salinity_psu" if ("salinity" in q and "temp" not in q) else "m.temperature_c"
+        param = self._detect_parameter(q)
         alias = "avg_salinity" if "salinity" in param else "avg_temp"
         where = self._where(region, is_city, period_filter)
+        if not where:
+            where = "m.is_valid = true"
+        else:
+            where = f"{where}\n  AND m.is_valid = true"
         sql = f"""
 SELECT DATE_TRUNC('month', p.profile_date) AS month, AVG({param}) AS {alias}
 FROM argo_measurements m
 JOIN argo_profiles p ON m.profile_id = p.profile_id
 WHERE {where}
-  AND m.is_valid = true
 GROUP BY month
 ORDER BY month"""
+        param_label = "salinity" if "salinity" in param else "temperature"
         return GeneratedSQL(
             sql=sql,
             intent_type="time_series",
             language=language,
-            explanation=f"Time series for '{region or 'Indian Ocean'}'.",
+            explanation=f"{param_label.capitalize()} time series for '{region or 'Indian Ocean'}'.",
             requested_period=label,
             requested_region=region,
         )
@@ -321,6 +401,50 @@ WHERE region = '{region}'{month_filter};"""
     def _period_from(self, q: str) -> tuple[str, str]:
         label, filter_sql = self._extract_period(q)
         return filter_sql, label
+
+    def _detect_parameter(self, q: str) -> str:
+        """Pick the measurement column based on the question text."""
+        if "salinity" in q and "temp" not in q:
+            return "m.salinity_psu"
+        return "m.temperature_c"
+
+    def _metadata_query(self, q: str, language: str) -> GeneratedSQL:
+        """Handle metadata / data-quality questions."""
+        region, _ = self._extract_region(q)
+        if "quality" in q or "qc" in q or "check" in q:
+            region_filter = f" AND region = '{region}'" if region else ""
+            _, period_label = self._period_from(q)
+            year_filter = ""
+            if period_label:
+                year_filter = f" AND year_month LIKE '{period_label.split('-')[0] if '-' in period_label else period_label}%'"
+            sql = f"""SELECT year_month, float_count, profile_count, total_readings, excluded_readings, qc_pass_ratio
+FROM qc_stats
+WHERE 1=1{region_filter}{year_filter}
+ORDER BY year_month"""
+            return GeneratedSQL(
+                sql=sql,
+                intent_type="metadata",
+                language=language,
+                explanation=f"QC statistics for {region or 'all regions'}.",
+                requested_region=region,
+            )
+        # Default metadata: list floats
+        region_join = ""
+        region_where = ""
+        if region:
+            region_join = " JOIN argo_profiles p ON p.float_id = f.float_id"
+            region_where = f" AND p.region = '{region}'"
+        sql = f"""SELECT DISTINCT f.float_id, f.deploy_date, f.status
+FROM argo_floats f{region_join}
+WHERE 1=1{region_where}
+ORDER BY f.float_id"""
+        return GeneratedSQL(
+            sql=sql,
+            intent_type="metadata",
+            language=language,
+            explanation=f"Floats in {region or 'the dataset'}.",
+            requested_region=region,
+        )
 
     # -------------------------------------------------------------- phrasing
 

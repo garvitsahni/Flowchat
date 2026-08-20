@@ -23,10 +23,7 @@ export function TrajectoryMap({
     const map = L.map(containerRef.current, {
       zoomControl: false,
       attributionControl: true,
-    }).setView(
-      [latitudes[0] ?? 0, longitudes[0] ?? 0],
-      6
-    );
+    });
 
     L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
@@ -37,13 +34,46 @@ export function TrajectoryMap({
       }
     ).addTo(map);
 
-    L.polyline(
-      latitudes.map((lat, i) => [lat, longitudes[i]]),
-      { color: PRIMARY, weight: 2, opacity: 0.85 }
-    ).addTo(map);
+    const latlngs: [number, number][] = latitudes.map((lat, i) => [lat, longitudes[i]]);
+
+    // Fit map bounds to trajectory with padding
+    if (latlngs.length > 0) {
+      const bounds = L.latLngBounds(latlngs);
+      map.fitBounds(bounds, { padding: [40, 40] });
+    }
+
+    // Draw waypoints (skip start and end, draw every Nth point to avoid clutter)
+    const step = Math.max(1, Math.floor(latlngs.length / 15));
+    for (let i = step; i < latlngs.length - 1; i += step) {
+      L.circleMarker(latlngs[i], {
+        radius: 2,
+        color: PRIMARY,
+        fillColor: PRIMARY,
+        fillOpacity: 0.5,
+        stroke: false,
+      }).addTo(map);
+    }
+
+    // Draw trajectory polyline
+    const path = L.polyline(latlngs, { 
+      color: PRIMARY, 
+      weight: 2, 
+      opacity: 0.85,
+      className: "trajectory-path" 
+    }).addTo(map);
+
+    // Animate the path using CSS stroke-dashoffset hack
+    const pathElement = path.getElement() as SVGElement | null;
+    if (pathElement) {
+      pathElement.style.animation = "chart-line-draw 2s ease-out forwards";
+      // Ensure SVG path has a dasharray length equal to its total length
+      // Leaflet doesn't make it easy to get exact length synchronously so we use a huge number
+      pathElement.style.strokeDasharray = "10000";
+      pathElement.style.strokeDashoffset = "10000";
+    }
 
     // Start marker (muted) → current marker (primary, with soft pulsing glow ring)
-    L.circleMarker([latitudes[0], longitudes[0]], {
+    L.circleMarker(latlngs[0], {
       radius: 4,
       color: MUTED,
       fillColor: MUTED,
@@ -52,15 +82,18 @@ export function TrajectoryMap({
       .bindTooltip("start", { permanent: false, className: "float-map-tip" })
       .addTo(map);
 
-    L.circleMarker([latitudes[latitudes.length - 1], longitudes[longitudes.length - 1]], {
-      radius: 10,
+    L.circleMarker(latlngs[latlngs.length - 1], {
+      radius: 12,
       color: PRIMARY,
-      opacity: 0.3,
-      fill: false,
+      opacity: 0.4,
+      fill: true,
+      fillColor: PRIMARY,
+      fillOpacity: 0.2,
+      className: "sonar-pulse"
     }).addTo(map);
 
-    L.circleMarker([latitudes[latitudes.length - 1], longitudes[longitudes.length - 1]], {
-      radius: 6,
+    L.circleMarker(latlngs[latlngs.length - 1], {
+      radius: 5,
       color: PRIMARY,
       fillColor: PRIMARY,
       fillOpacity: 1,
