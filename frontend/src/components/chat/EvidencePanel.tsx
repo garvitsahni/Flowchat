@@ -33,7 +33,7 @@ export function EvidencePanel({
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-1.5 font-mono text-xs tracking-wide text-muted-foreground transition-colors hover:text-primary"
       >
-        <span className="text-primary">\u2304</span>
+        <span className="text-primary">{"\u2304"}</span>
         {open ? "How I got this \u2014 hide" : "How I got this"}
         <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.25, ease: "easeOut" }} className="inline-block">
           <ChevronDown size={12} />
