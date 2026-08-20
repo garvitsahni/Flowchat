@@ -25,7 +25,7 @@ export function SegmentedControl({
       role="radiogroup"
       aria-label={ariaLabel}
       className={cn(
-        "inline-flex items-center rounded-full border border-border bg-card p-1",
+        "inline-flex items-center border border-border bg-[#0D0F0F] p-0",
         size === "sm" ? "h-7" : "h-9"
       )}
     >
@@ -39,24 +39,22 @@ export function SegmentedControl({
             aria-checked={active}
             onClick={() => onChange(opt.value)}
             className={cn(
-              "relative rounded-full outline-none transition-colors",
+              "relative h-full outline-none transition-colors",
               size === "sm" ? "px-2.5" : "px-4",
-              active
-                ? "text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
+              active ? "text-primary" : "text-muted-foreground hover:text-foreground"
             )}
           >
             {active && (
               <motion.span
                 layoutId="segmented-thumb"
                 transition={{ type: "spring", stiffness: 500, damping: 34 }}
-                className="absolute inset-0 rounded-full bg-primary"
+                className="absolute inset-0 border border-primary/60 bg-primary/5"
               />
             )}
             <span
               className={cn(
-                "relative z-10 font-mono text-xs",
-                size === "md" && "text-sm"
+                "relative z-10 font-mono text-[10px] uppercase tracking-[0.12em]",
+                size === "md" && "text-xs"
               )}
             >
               {opt.label}
