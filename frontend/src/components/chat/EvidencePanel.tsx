@@ -17,14 +17,32 @@ export function EvidencePanel({
   calculation?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const rows: [string, string][] = [
-    ["data source", info.floats_used.length ? `ARGO float(s): ${info.floats_used.join(", ")}` : "no float attributed"],
-    ...(observations ? ([[ "observations", observations.toLocaleString() ]] as [string, string][]) : []),
-    ["date range", info.time_range_queried || "\u2014"],
-    ...(region ? ([[ "region", region ]] as [string, string][]) : []),
-    ["quality checks", `${info.qc_excluded_count.toLocaleString()} readings excluded (QC flag 4 at ingestion)`],
-    ...(calculation ? ([[ "calculation", calculation ]] as [string, string][]) : []),
-    ...(quality ? ([[ "usable readings", `${quality}%` ]] as [string, string][]) : []),
+  const rows: { label: string; value: string; explanationKey?: string }[] = [
+    {
+      label: "data source",
+      value: info.floats_used.length ? `ARGO float(s): ${info.floats_used.join(", ")}` : "no float attributed",
+      explanationKey: "floats_used",
+    },
+    ...(observations
+      ? [{ label: "observations", value: observations.toLocaleString(), explanationKey: "readings" }]
+      : []),
+    {
+      label: "date range",
+      value: info.time_range_queried || "\u2014",
+      explanationKey: "time_range",
+    },
+    ...(region ? [{ label: "region", value: region, explanationKey: undefined }] : []),
+    {
+      label: "quality checks",
+      value: `${info.qc_excluded_count.toLocaleString()} readings excluded (QC flag 4 at ingestion)`,
+      explanationKey: "qc_excluded",
+    },
+    ...(calculation
+      ? [{ label: "calculation", value: calculation, explanationKey: "calculation" }]
+      : []),
+    ...(quality
+      ? [{ label: "usable readings", value: `${quality}%`, explanationKey: "usable" }]
+      : []),
   ];
   return (
     <div className="mt-3 w-full">
@@ -51,10 +69,15 @@ export function EvidencePanel({
           >
             <div className="mt-2 border border-border bg-[#0D0F0F]">
               <div className="grid grid-cols-1 gap-x-6 gap-y-1.5 px-3 py-2.5 sm:grid-cols-2">
-                {rows.map(([k, v]) => (
-                  <div key={k} className="font-mono text-xs">
-                    <span className="mr-2 text-muted-foreground/60">{k}:</span>
-                    <span className="text-foreground">{v}</span>
+                {rows.map(({ label, value, explanationKey }) => (
+                  <div key={label} className="font-mono text-xs">
+                    <span className="mr-2 text-muted-foreground/60">{label}:</span>
+                    <span className="text-foreground">{value}</span>
+                    {explanationKey && info.explanations?.[explanationKey] && (
+                      <div className="mt-0.5 text-[11px] text-muted-foreground/70 leading-relaxed">
+                        {info.explanations[explanationKey]}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
