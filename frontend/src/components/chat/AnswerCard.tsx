@@ -1,4 +1,4 @@
-import type { QueryResponse, TimeSeriesData, HeatmapData, ChartData } from "../../types";
+import type { QueryResponse, TimeSeriesData, HeatmapData, ChartData, ChartType } from "../../types";
 import { getRegionContext } from "../../lib/demo";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { DataContext } from "./DataContext";
@@ -23,6 +23,21 @@ function calcLabel(response: QueryResponse): string {
     case "comparison": return "annual mean vs baseline";
     case "trajectory": return "surface position tracking";
     default: return "aggregation over valid readings";
+  }
+}
+
+function getHeadlineGlossKey(chartType: ChartType): string | null {
+  switch (chartType) {
+    case "depth_profile":
+    case "trajectory":
+      return "floats_used";
+    case "time_series":
+    case "heatmap":
+      return "readings";
+    case "comparison":
+      return "calculation";
+    default:
+      return null;
   }
 }
 
@@ -55,6 +70,15 @@ export function AnswerCard({ text, response }: { text: string; response: QueryRe
     <article className="w-full max-w-[92%]">
       <div className="border border-border bg-[#111313]">
         <p className="px-3.5 py-3 text-[15px] leading-relaxed text-foreground">{highlightNumbers(text)}</p>
+        {(() => {
+          const key = getHeadlineGlossKey(response.chart_type);
+          const gloss = key ? response.explainability.explanations?.[key] : null;
+          return gloss ? (
+            <div className="mt-2 mb-1 px-3.5 text-[12px] leading-relaxed text-muted-foreground/70 font-mono">
+              {gloss}
+            </div>
+          ) : null;
+        })()}
         <div className="px-3.5 pb-3">
           <ConfidenceBadge confidence={response.confidence} note={response.confidence_note} />
         </div>
