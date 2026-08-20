@@ -27,6 +27,7 @@ Thumbs.db
 .idea/
 .vscode/
 frontend/dev*.log
+frontend/vite-*.log
 frontend/dist/
 backend/uvicorn-err.log
 backend/uvicorn-out.log
