@@ -8,10 +8,10 @@ export default function App() {
   const [viz, setViz] = useState<QueryResponse | null>(null);
 
   return (
-    <div className="flex h-screen w-screen flex-col bg-abyss-950 text-foam-50">
-      <header className="flex items-center justify-between border-b border-current-500/30 px-6 py-3">
+    <div className="flex h-screen w-screen flex-col bg-background text-foreground">
+      <header className="flex items-center justify-between border-b border-border px-6 py-3">
         <div className="flex items-baseline gap-3">
-          <h1 className="font-mono text-xl font-semibold tracking-tight text-foam-50">
+          <h1 className="font-mono text-xl font-semibold tracking-tight text-foreground">
             Float<span className="text-bio-400">Chat</span>
           </h1>
           <span className="hidden font-mono text-xs tracking-widest text-current-300 sm:inline">

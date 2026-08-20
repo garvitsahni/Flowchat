@@ -3,18 +3,28 @@
 @tailwind utilities;
 
 :root {
-  --abyss-950: #1f1e1d;
-  --abyss-900: #262624;
-  --abyss-800: #30302e;
-  --current-500: #3f3d3b;
-  --current-300: #8c8a86;
-  --bioluminescent-400: #d97757;
-  --bioluminescent-300: #e68a6e;
-  --surface-scan-500: #f4a259;
-  --flag-critical-500: #e8544e;
-  --foam-50: #ececec;
-  --foam-200: #b5b3ae;
-  --sonar-grid: rgba(217, 119, 87, 0.08);
+  --background: 222 44% 6%;
+  --foreground: 210 40% 96%;
+  --card: 222 40% 8%;
+  --card-foreground: 210 40% 96%;
+  --popover: 222 40% 8%;
+  --popover-foreground: 210 40% 96%;
+  --primary: 174 72% 50%;
+  --primary-foreground: 222 47% 7%;
+  --secondary: 220 30% 14%;
+  --secondary-foreground: 210 40% 92%;
+  --muted: 220 28% 12%;
+  --muted-foreground: 215 18% 58%;
+  --accent: 220 30% 14%;
+  --accent-foreground: 210 40% 96%;
+  --destructive: 0 62% 55%;
+  --destructive-foreground: 210 40% 96%;
+  --warning: 32 95% 64%;
+  --warning-foreground: 222 47% 7%;
+  --border: 220 26% 16%;
+  --input: 220 26% 16%;
+  --ring: 174 72% 50%;
+  --radius: 0.625rem;
 }
 
 html,
@@ -24,8 +34,8 @@ body,
 }
 
 body {
-  background: var(--abyss-950);
-  color: var(--foam-50);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
   font-family: "Inter", system-ui, sans-serif;
   font-size: 16px;
   line-height: 1.6;
@@ -35,39 +45,14 @@ body {
   font-family: "Noto Sans Devanagari", "Inter", sans-serif;
 }
 
-/* Sonar sweep — slow calm pulse instead of a spinner (DESIGN.md §2.4) */
-@keyframes sonar-sweep {
-  0% {
-    background-position: -120px 0;
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    background-position: 160px 0;
-    opacity: 0.4;
-  }
-}
-
-.sonar-sweep {
-  background-image: linear-gradient(
-    100deg,
-    transparent 20%,
-    var(--bioluminescent-400) 50%,
-    transparent 80%
-  );
-  background-repeat: no-repeat;
-  animation: sonar-sweep 1.6s ease-in-out infinite;
-}
-
+/* Sonar pulse for the LIVE badge and low-confidence dot */
 @keyframes sonar-pulse {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(244, 162, 89, 0.5);
+    box-shadow: 0 0 0 0 hsla(174, 72%, 50%, 0.5);
   }
   50% {
-    box-shadow: 0 0 0 4px rgba(244, 162, 89, 0);
+    box-shadow: 0 0 0 4px hsla(174, 72%, 50%, 0);
   }
 }
 
@@ -77,9 +62,9 @@ body {
 
 /* Leaflet tooltip on dark */
 .float-map-tip {
-  background: var(--abyss-800) !important;
-  border: 1px solid var(--current-500) !important;
-  color: var(--foam-50) !important;
+  background: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
   font-family: "IBM Plex Mono", monospace !important;
   font-size: 11px !important;
   border-radius: 4px !important;
@@ -91,7 +76,7 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--current-500);
+  background: hsl(var(--border));
   border-radius: 4px;
 }
 ::-webkit-scrollbar-track {
