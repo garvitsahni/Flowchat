@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { PromptInputDemo } from "./PromptInputDemo";
+import { StockChartDemo } from "./StockChartDemo";
 
 export function DemoHub() {
   return (
@@ -34,14 +35,7 @@ export function DemoHub() {
               <PromptInputDemo />
             </TabsContent>
             <TabsContent value="stock" className="mt-6">
-              <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
-                <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                  stock chart demo — coming soon
-                </p>
-                <p className="mt-2 font-mono text-[13px] text-muted-foreground/70">
-                  premium dark-mode AMZN chart with 60/200 SMA (recharts)
-                </p>
-              </div>
+              <StockChartDemo />
             </TabsContent>
           </BlurFade>
         </Tabs>
