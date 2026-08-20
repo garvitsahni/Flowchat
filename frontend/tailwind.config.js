@@ -50,6 +50,9 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      transitionDuration: {
+        400: "400ms",
+      },
       fontFamily: {
         mono: ["IBM Plex Mono", "ui-monospace", "monospace"],
         sans: ["Inter", "system-ui", "sans-serif"],

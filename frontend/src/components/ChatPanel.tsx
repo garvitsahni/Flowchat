@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import type { FormEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { SendHorizonal, Waves } from "lucide-react";
+import { Waves } from "lucide-react";
 import type { Language, QueryResponse } from "../types";
 import { ask } from "../lib/api";
 import { cn } from "../lib/utils";
-import { LanguageToggle } from "./LanguageToggle";
 import { ConfidenceBadge } from "./ConfidenceBadge";
 import { ExplainabilityDrawer } from "./ExplainabilityDrawer";
 import { TypingIndicator } from "@/components/ui/typing-indicator";
+import { PromptInput } from "@/components/ui/ai-chat-input";
 
 interface Message {
   role: "user" | "system";
@@ -32,35 +31,23 @@ const BUBBLE_MOTION = {
 
 export function ChatPanel({
   language,
-  onLanguageChange,
   onVizChange,
 }: {
   language: Language;
-  onLanguageChange: (lang: Language) => void;
   onVizChange: (response: QueryResponse | null) => void;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, busy]);
 
-  useEffect(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "0";
-    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
-  }, [input]);
-
   async function send(question: string) {
     const text = question.trim();
     if (!text || busy) return;
     setBusy(true);
-    setInput("");
     setMessages((m) => [...m, { role: "user", text }]);
     try {
       const response = await ask(text, language);
@@ -81,11 +68,6 @@ export function ChatPanel({
     } finally {
       setBusy(false);
     }
-  }
-
-  function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    void send(input);
   }
 
   const empty = messages.length === 0;
@@ -173,44 +155,11 @@ export function ChatPanel({
       </div>
 
       <div className="border-t border-border pt-3">
-        <form onSubmit={onSubmit}>
-          <div className="cursor-text rounded-2xl border border-input bg-card shadow-lg transition-all focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-ring">
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  void send(input);
-                }
-              }}
-              placeholder="Ask about floats, regions, or measurements…"
-              disabled={busy}
-              rows={1}
-              className="w-full resize-none overflow-hidden bg-transparent px-4 pb-0 pt-3.5 text-[15px] leading-[1.6] text-foreground outline-none placeholder:text-muted-foreground/40 disabled:opacity-60"
-            />
-            <div className="flex items-center justify-between gap-3 px-2 pb-2">
-              <div className="flex items-center gap-1 pl-1.5">
-                <LanguageToggle language={language} onChange={onLanguageChange} />
-              </div>
-              <motion.button
-                type="submit"
-                disabled={busy || !input.trim()}
-                aria-label="Send message"
-                whileTap={{ scale: 0.9 }}
-                className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
-                  input.trim() && !busy
-                    ? "bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)_/_0.4)] hover:bg-primary/80"
-                    : "bg-muted text-muted-foreground/40"
-                )}
-              >
-                <SendHorizonal size={15} />
-              </motion.button>
-            </div>
-          </div>
-        </form>
+        <PromptInput
+          onSubmit={(value) => void send(value)}
+          placeholder="Ask about floats, regions, or measurements…"
+          className="mx-auto"
+        />
       </div>
     </div>
   );

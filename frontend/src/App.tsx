@@ -1,12 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Language, QueryResponse } from "./types";
 import { ChatPanel } from "./components/ChatPanel";
 import { VizPanel } from "./components/VizPanel";
 import { AuroraBackground } from "@/components/ui/aurora-background";
+import { LanguageToggle } from "./components/LanguageToggle";
+import { PromptInputDemo } from "./demo/PromptInputDemo";
 
 export default function App() {
   const [language, setLanguage] = useState<Language>("en");
   const [viz, setViz] = useState<QueryResponse | null>(null);
+  const [route, setRoute] = useState(() => window.location.hash);
+
+  useEffect(() => {
+    const onHashChange = () => setRoute(window.location.hash);
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
+  if (route === "#/demo/prompt") {
+    return <PromptInputDemo />;
+  }
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-background text-foreground">
@@ -29,9 +42,7 @@ export default function App() {
             <span className="h-1.5 w-1.5 rounded-full bg-primary sonar-pulse" />
             LIVE · float 2900226
           </span>
-          <span className="font-mono text-xs text-muted-foreground">
-            {language === "en" ? "en · english" : "hi · हिन्दी"}
-          </span>
+          <LanguageToggle language={language} onChange={setLanguage} />
         </div>
       </header>
 
@@ -39,7 +50,6 @@ export default function App() {
         <section className="min-h-0 flex-1 lg:border-r lg:border-border">
           <ChatPanel
             language={language}
-            onLanguageChange={setLanguage}
             onVizChange={setViz}
           />
         </section>
