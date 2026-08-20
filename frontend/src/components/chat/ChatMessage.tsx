@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import type { QueryResponse } from "../../types";
 import { AnswerCard } from "./AnswerCard";
+import { RelatedQueries } from "./RelatedQueries";
 
 export interface Message {
   role: "user" | "system";
@@ -15,7 +16,13 @@ const ROW_MOTION = {
   transition: { duration: 0.3, ease: "easeOut" as const },
 };
 
-export function ChatMessage({ message }: { message: Message }) {
+export function ChatMessage({
+  message,
+  onRelated,
+}: {
+  message: Message;
+  onRelated?: (q: string) => void;
+}) {
   if (message.role === "user") {
     return (
       <motion.div {...ROW_MOTION} className="flex justify-end">
@@ -45,7 +52,10 @@ export function ChatMessage({ message }: { message: Message }) {
   }
   return (
     <motion.div {...ROW_MOTION} className="flex justify-start">
-      <AnswerCard text={message.text} response={message.response} />
+      <div className="w-full max-w-[92%]">
+        <AnswerCard text={message.text} response={message.response} />
+        {onRelated ? <RelatedQueries onSelect={onRelated} /> : null}
+      </div>
     </motion.div>
   );
 }

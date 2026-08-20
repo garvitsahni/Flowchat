@@ -132,7 +132,7 @@ const YEARLY_TEMP: DemoPoint[] = [
   { period: "2004", value: 24.9, observations: 902, quality: 74 },
 ];
 
-const yearlyFor = (base: number, values: number[], obs: number[]): DemoPoint[] =>
+const yearlyFor = (_base: number, values: number[], obs: number[]): DemoPoint[] =>
   values.map((v, i) => ({
     period: YEAR_LABELS[i],
     value: v,
@@ -311,7 +311,7 @@ export function EvidencePanel({
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-1.5 font-mono text-xs tracking-wide text-muted-foreground transition-colors hover:text-primary"
       >
-        <span className="text-primary">\u2304</span>
+        <span className="text-primary">{"\u2304"}</span>
         {open ? "How I got this \u2014 hide" : "How I got this"}
         <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.25, ease: "easeOut" }} className="inline-block">
           <ChevronDown size={12} />
@@ -663,7 +663,7 @@ export function Header({
           Float<span className="text-primary">Chat</span>
         </h1>
         <span className="hidden font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground md:inline">
-          Deep-Sea Instrument Panel \u00B7 Indian Ocean
+          Deep-Sea Instrument Panel · Indian Ocean
         </span>
       </div>
       <div className="flex items-center gap-4">
@@ -675,7 +675,7 @@ export function Header({
             </span>
           </TooltipTrigger>
           <TooltipContent side="bottom">
-            Streaming ARGO float \u00B7 {profileCount} profiles \u00B7 {region}
+            Streaming ARGO float {"\u00B7"} {profileCount} profiles {"\u00B7"} {region}
           </TooltipContent>
         </Tooltip>
         <span className="hidden font-mono text-xs text-muted-foreground sm:inline">float {floatId}</span>
