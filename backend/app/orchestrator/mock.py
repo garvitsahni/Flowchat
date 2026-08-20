@@ -265,6 +265,10 @@ class MockProvider:
                 label = f"{year}-{mm}"
                 return label, self._month_sql(year, int(mm))
 
+        range_label, range_filter = self._extract_year_range(q)
+        if range_label:
+            return range_label, range_filter
+
         pat_year = re.compile(r"\b(19|20)\d{2}\b")
         m = pat_year.search(q)
         if m:
@@ -281,6 +285,28 @@ class MockProvider:
         else:
             end = datetime(year, month + 1, 1)
         return f"p.profile_date >= '{start:%Y-%m-%d}' AND p.profile_date < '{end:%Y-%m-%d}'"
+
+    def _extract_year_range(self, q: str) -> tuple[str, str]:
+        """Detect a year span like '2018-2020', '2018 to 2020', or '2018 and 2020'.
+
+        Returns (label, sql_filter) or ("", "") if no range is present. Must run
+        before the single-year matcher so ranges don't collapse to their start year.
+        """
+        pat = re.compile(
+            r"\b((?:19|20)\d{2})\s*(?:\u2013|\u2014|-|to|and|through)\s*((?:19|20)\d{2})\b",
+            re.IGNORECASE,
+        )
+        m = pat.search(q)
+        if not m:
+            return "", ""
+        start = int(m.group(1))
+        end = int(m.group(2))
+        if end <= start:
+            return "", ""
+        label = f"{start}-{end}"
+        return label, (
+            f"p.profile_date >= '{start}-01-01' AND p.profile_date < '{end + 1}-01-01'"
+        )
 
     # ------------------------------------------------------------ SQL builders
 
