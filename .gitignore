@@ -31,3 +31,5 @@ frontend/vite-*.log
 frontend/dist/
 backend/uvicorn-err.log
 backend/uvicorn-out.log
+backend/stderr.log
+backend/stdout.log

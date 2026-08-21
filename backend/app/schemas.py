@@ -21,6 +21,9 @@ class Explainability(BaseModel):
     time_range_queried: str = ""
     # Human-readable explanations for non-technical users
     explanations: dict[str, str] = Field(default_factory=dict)
+    # Raw intent from the NL→SQL step — frontend uses this to distinguish
+    # metadata queries (list floats) from scalar aggregates (chart_type: "none")
+    intent_type: str = ""
 
 
 ChartType = Literal["depth_profile", "trajectory", "time_series", "comparison", "heatmap", "none"]

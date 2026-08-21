@@ -68,6 +68,29 @@ export function VizPanel({
 
   if (type === "none") {
     const reason = response.refusal_reason;
+    const intent = response.explainability.intent_type;
+    
+    // Metadata query — show the float list as a data grid
+    if (!reason && intent === "metadata") {
+      return (
+        <MetadataCard
+          title="dataset metadata"
+          floats={response.explainability.floats_used}
+        />
+      );
+    }
+    
+    // Scalar aggregate answer (e.g. "average is 16.5°C") — no chart, just the text
+    if (!reason) {
+      return (
+        <StateCard
+          icon={<FlaskConical className="text-primary" size={20} strokeWidth={1.5} />}
+          title="result"
+          detail={response.answer_text}
+        />
+      );
+    }
+    
     const title =
       reason === "no_data"
         ? "no data in scope"
@@ -242,6 +265,44 @@ function StateCard({
       </div>
       <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{title}</p>
       <p className="max-w-xs font-mono text-[13px] leading-relaxed text-muted-foreground/70">{detail}</p>
+    </motion.div>
+  );
+}
+
+function MetadataCard({
+  title,
+  floats,
+}: {
+  title: string;
+  floats: string[];
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+      className="flex h-full min-h-[280px] flex-col border border-border bg-[#111313]"
+    >
+      <header className="flex items-center justify-between border-b border-border px-3.5 py-2.5">
+        <span className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-foreground">
+          {title}
+        </span>
+        <span className="font-mono text-xs text-muted-foreground/70">
+          {floats.length} floats
+        </span>
+      </header>
+      <div className="min-h-0 flex-1 overflow-auto p-3">
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
+          {floats.map((id) => (
+            <div
+              key={id}
+              className="flex items-center justify-center border border-border bg-[#0D0F0F] px-2 py-1.5 font-mono text-xs text-foreground"
+            >
+              {id}
+            </div>
+          ))}
+        </div>
+      </div>
     </motion.div>
   );
 }

@@ -15,6 +15,7 @@ export interface Explainability {
   qc_excluded_count: number;
   time_range_queried: string;
   explanations?: Record<string, string>;
+  intent_type?: string;
 }
 
 // Chart data types matching backend viz.py

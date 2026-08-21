@@ -345,6 +345,7 @@ async def query(req: QueryRequest) -> QueryResponse:
             qc_excluded_count=confidence.qc_excluded_count,
             time_range_queried=generated.requested_period,
             explanations=explanations,
+            intent_type=generated.intent_type,
         ),
     )
 
